@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>La Salle University – Interactive Campus Guide</title> 
+  <link rel="stylesheet" href="style1.css"> 
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    .view-toggle {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 1000;
+      display: flex;
+      gap: 8px;
+      background: rgba(255,255,255,0.95);
+      padding: 6px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    }
+    .view-toggle button {
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: #1b4332;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .view-toggle button.active {
+      background: #1b4332;
+      color: #fff;
+    }
+    #view3d.hidden-view {
+      display: none;
+    }
+    #view2d {
+      display: none;
+      height: 100vh;
+      width: 100%;
+    }
+    #view2d.active {
+      display: block;
+    }
+    #nav2d-controls {
+      position: fixed;
+      top: 70px;
+      right: 16px;
+      z-index: 1000;
+      background: rgba(255,255,255,0.95);
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+      font-size: 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 180px;
+    }
+    #nav2d-controls select, #nav2d-controls button {
+      padding: 6px 8px;
+      font-size: 13px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    #nav2d-controls button {
+      background: #40916c;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    #nav2d-controls button#gpsBtn {
+      background: #007AFF;
+    }
+
+    /* FIX: make the sidebar float on top of the map instead of pushing it
+       aside. The map/3D view is always full-width underneath; the sidebar
+       just overlays it when open and disappears completely when closed -
+       this avoids relying on the map resizing itself, which was leaving a
+       blank gap where the sidebar used to be. */
+    #view3d, #view2d, #map {
+      margin-left: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+    }
+    /* Keep the toggle buttons and nav controls as small floating pills in
+       the corner, not stretched full-width by the rule above. */
+    .view-toggle {
+      left: auto !important;
+      width: auto !important;
+    }
+    #nav2d-controls {
+      left: auto !important;
+      width: auto !important;
+    }
+    .sidebar {
+      position: fixed !important;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      z-index: 2000;
+      transition: transform 0.3s ease;
+    }
+    .sidebar.hidden {
+      transform: translateX(-100%);
+    }
+  </style>
+</head>
+
+<body>
+<aside class="sidebar">
+  <button class="toggle-btn" id="toggleSidebar">
+    <i class='bx bx-chevron-left'></i>
+  </button>
+  
+  <div class="banner">
+    <div class="search-container">
+      <div class="search-box">
+        <i class='bx bx-search search-icon'></i>
+        <input id="search" placeholder="Search buildings, locations..." autocomplete="off" />
+        <button class="search-btn">
+          <i class='bx bx-arrow-right'></i>
+        </button>
+      </div>
+      <div id="search-results" class="search-results"></div>
+    </div>
+  </div>
+
+  <div class="sidebar-content">
+    <!-- Building Categories Section -->
+    <div class="menu-section">
+      <div class="menu-header">
+        <i class='bx bx-buildings'></i>
+        <span class="menu-title">Building Categories</span>
+        <button class="expand-btn" id="catToggle">
+          <i class='bx bx-chevron-down'></i>
+        </button>
+      </div>
+      <div class="subcats" id="subcats">
+        <button class="subcat-btn" data-cat="all" onclick="window.location.href='Allbuilding.html'">
+          <i class='bx bx-map'></i>
+          <span>All Buildings</span>
+        </button>
+        <button class="subcat-btn" data-cat="administrative" onclick="window.location.href='Administrative.html'">
+          <i class='bx bx-briefcase'></i>
+          <span>Administrative Offices</span>
+        </button>
+        <button class="subcat-btn" data-cat="academic" onclick="window.location.href='Academic.html'">
+          <i class='bx bx-book'></i>
+          <span>Academic Rooms</span>
+        </button>
+        <button class="subcat-btn" data-cat="labs" onclick="window.location.href='Laboratories.html'">
+          <i class='bx bx-test-tube'></i>
+          <span>Laboratories</span>
+        </button>
+        <button class="subcat-btn" data-cat="sports" onclick="window.location.href='Sports.html'">
+          <i class='bx bx-trophy'></i>
+          <span>Sports Facilities</span>
+        </button>
+        <button class="subcat-btn" data-cat="services" onclick="window.location.href='Services.html'">
+          <i class='bx bx-wrench'></i>
+          <span>Services</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Photos & Galleries -->
+    <div class="menu-section">
+      <button class="main-btn gallery-btn" onclick="window.location.href='photosgallery.html'">
+        <i class='bx bx-photo-album'></i>
+        <span>Photos & Galleries</span>
+        <i class='bx bx-chevron-right'></i>
+      </button>
+    </div>
+
+    <!-- Join Us Section -->
+    <div class="menu-section">
+      <div class="menu-header">
+        <i class='bx bx-group'></i>
+        <span class="menu-title">Join Us</span>
+      </div>
+      <div class="menu-content">
+        <button class="main-btn gallery-btn" onclick="window.location.href='admissioninformation.html'">
+          <i class='bx bx-user-plus'></i>
+          <span>Admission Information</span>
+        </button>
+        <button class="main-btn gallery-btn" onclick="window.location.href='registrarinformation.html'">
+          <i class='bx bx-calendar-event'></i>
+          <span>Registrar Information</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Settings Section -->
+    <div class="menu-section">
+      <div class="menu-header">
+        <i class='bx bx-cog'></i>
+        <span class="menu-title">Settings</span>
+      </div>
+      <div class="menu-content">
+          <button class="main-btn gallery-btn" onclick="window.location.href='settings.html'">
+          <i class='bx bx-slider-alt'></i>
+          <span>Preferences</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Back Button -->
+    <div class="menu-section">
+      <button class="main-btn back-btn" onclick="window.location.href='index.html'">
+        <i class='bx bx-arrow-back'></i>
+        <span>Go Back to Main</span>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<button class="reopen-btn" id="openSidebar" aria-label="Open sidebar">
+  <i class='bx bx-menu'></i>
+</button>
+
+<!-- View toggle: 3D visual map (SketchUp model) vs 2D point-to-point navigation -->
+<div class="view-toggle">
+  <button id="btn3d" class="active" onclick="showMapView('3d')">
+    <i class='bx bx-cube-alt'></i> 3D View
+  </button>
+  <button id="btn2d" onclick="showMapView('2d')">
+    <i class='bx bx-map-alt'></i> 2D Navigation
+  </button>
+</div>
+
+<!-- 3D View: SketchUp campus model -->
+<div id="view3d">
+<!-- Map Section -->
+<div id="map" style="height: 100vh; width: 100%; margin: 0; padding: 0; overflow: hidden;">
+
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+  <model-viewer
+    id="campusModel"
+    src="LSU_CAMPUS_1_and_2_3D_model.glb"
+    alt="La Salle University Campus 3D Map"
+    camera-controls
+    touch-action="pan-y"
+    shadow-intensity="1"
+    exposure="1"
+
+    camera-orbit="-42.4547deg 64.4970deg 1147.4278"
+    camera-target="-93.7274m 11.8883m -203.1199m"
+
+    field-of-view="25deg"
+
+    min-camera-orbit="auto 35deg 5%"
+    max-camera-orbit="auto 80deg 7%"
+
+    interaction-prompt="none"
+
+    style="width:100%; height:100vh; display:block; border:none; background:#dfe3e6;">
+
+    <div class="mv-progress-bar" slot="progress-bar">
+      <div class="mv-update-bar"></div>
+    </div>
+
+  </model-viewer>
+</div>
+</div>
+
+<!-- 2D Navigation View (point-to-point routing) -->
+<div id="view2d">
+  <div id="nav2d-controls">
+    <label>From:</label>
+    <select id="nav2dFrom"></select>
+    <label>To:</label>
+    <select id="nav2dTo"></select>
+    <button onclick="find2DRoute()">Find Route</button>
+    <button onclick="clear2DRoute()">Clear</button>
+    <button id="gpsBtn" onclick="toggleGPSTracking()">Enable Live GPS</button>
+    <span id="nav2dStats"></span>
+    <span id="nav2dStatus" style="font-size:12px;color:#b00020;max-width:220px"></span>
+  </div>
+  <div id="leafletMap" style="height: 100%; width: 100%;"></div>
+</div>
+
+<style>
+  .mv-progress-bar {
+    display: block;
+    width: 33%;
+    height: 4px;
+    max-width: 300px;
+    border-radius: 2px;
+    box-shadow: 0px 0px 3px 1px rgba(0,0,0,0.15);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate3d(-50%, -50%, 0);
+    background-color: rgba(0,0,0,0.1);
+  }
+  .mv-update-bar {
+    background-color: #4285f4;
+    width: 0%;
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+</style>
+
+<script>
+  const mapModelViewer = document.querySelector('#map model-viewer');
+  if (mapModelViewer) {
+    mapModelViewer.addEventListener('progress', (event) => {
+      const progressBar = mapModelViewer.querySelector('.mv-update-bar');
+      const container = mapModelViewer.querySelector('.mv-progress-bar');
+      if (progressBar) progressBar.style.width = `${event.detail.totalProgress * 100}%`;
+      if (container) container.style.display = event.detail.totalProgress === 1 ? 'none' : 'block';
+    });
+  }
+</script>
+
+<!-- Card for building info -->
+<div class="card" id="infoCard">
+  <img src="" alt="Building" id="cardImg" />
+  <div class="pad">
+    <h3 id="cardTitle"></h3>
+    <p id="cardDesc"></p>
+  </div>
+</div>
+
+<!-- Updated Chatbot -->
+<div class="chat-btn" id="chatBtn">💬</div>
+<div class="chat-box" id="chatBox">
+  <div class="chat-head">La Salle AI Assistant</div>
+  <div class="chat-body" id="chatBody"></div>
+  <div class="chat-input">
+    <input type="text" id="chatInput" placeholder="Ask about admissions, tuition, campus..." />
+    <button onclick="sendMessage()">➤</button>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// JavaScript functionality
+document.getElementById('catToggle').onclick = () => {
+  const subcats = document.getElementById('subcats');
+  const icon = document.getElementById('catToggle').querySelector('i');
+  
+  subcats.style.display = subcats.style.display === 'flex' ? 'none' : 'flex';
+  icon.className = subcats.style.display === 'flex' ? 'bx bx-chevron-up' : 'bx bx-chevron-down';
+};
+
+function showCard(title, img, desc) {
+  document.getElementById('infoCard').style.display = 'block';
+  document.getElementById('cardTitle').innerText = title;
+  document.getElementById('cardImg').src = img;
+  document.getElementById('cardDesc').innerText = desc;
+}
+
+// Search functionality
+const searchInput = document.getElementById('search');
+const searchResults = document.getElementById('search-results');
+const searchBtn = document.querySelector('.search-btn');
+
+const buildings = [
+  {
+    name: "BVM Building",
+    keywords: ["BVM", "office", "administration"],
+    page: "Buildings/BVM/bvmbuilding.html",
+    image: "552579832_1306263221234314_7186467780682867067_n.jpg"
+  },
+  {
+    name: "SJ Building",
+    keywords: ["admin", "office", "administration"],
+    page: "Buildings/SJ Building/sjbuilding.html",
+    image: "admin.jpg"
+  },
+  {
+    name: "LS Building",
+    keywords: ["building", "office", "administration"],
+    page: "Buildings/LS Building/lsbuilding.html",
+    image: "admin.jpg"
+  },
+  {
+    name: "Art Center",
+    keywords: ["lab", "Art", "Gym"],
+    page: "Buildings/Art Center/artcenterbuilding.html",
+    image: "lab.jpg"
+  },
+  {
+    name: "ROTC Building",
+    keywords: ["ROTC", "computer", "building"],
+    page: "Buildings/ROTC/rotcbuilding.html",
+    image: "computerlab.jpg"
+  },
+  {
+    name: "IS Basketball Court",
+    keywords: ["sports", "gym", "basketball"],
+    page: "Buildings/IS Basketball Court/isbasketballcourt.html",
+    image: "gym.jpg"
+  },
+  {
+    name: "SB Building",
+    keywords: ["SB", "ground", "basketball"],
+    page: "Buildings/SB building/sbbuilding.html",
+    image: "gym.jpg"
+  },
+  {
+    name: "Star Chapel",
+    keywords: ["chapel", "building", "religious"],
+    page: "Buildings/Star Chapel/starchapel.html",
+    image: "starchapel.jpg"
+  },
+  {
+    name: "SC Building",
+    keywords: ["SC", "building", "religious"],
+    page: "Buildings/SC/scbuilding.html",
+    image: "starchapel.jpg"
+  },
+  {
+    name: "Lasallian Mission Unit (LMU)",
+    keywords: ["LMU", "building", "administrative"],
+    page: "Buildings/LMU/LMU.html",
+    image: "starchapel.jpg"
+  },
+  {
+    name: "Deportivo",
+    keywords: ["Deportivo", "building", "Basketball"],
+    page: "Buildings/SC/scbuilding.html",
+    image: "starchapel.jpg"
+  },
+  {
+    name: "La Librarie",
+    keywords: ["La Librarie", "building", "religious"],
+    page: "Buildings/La Librarie/lalibrarie.html",
+    image: "starchapel.jpg"
+  },
+  {
+    name: "Recycling",
+    keywords: ["Recycling", "building", "religious"],
+    page: "Buildings/Recycling/recycling.html",
+    image: "starchapel.jpg"
+  },
+  {
+    name: "Oval",
+    keywords: ["Oval", "building", "religious"],
+    page: "Buildings/Oval/oval.html",
+    image: "starchapel.jpg"
+  },
+  {
+    name: "University Clinic",
+    keywords: ["University Clinic", "building", "Clinic"],
+    page: "Buildings/University Clinic/universityclinic.html",
+    image: "starchapel.jpg"
+  },
+  {
+    name: "USG Office",
+    keywords: ["office", "student", "government"],
+    page: "Buildings/USG Office/usgoffice.html",
+    image: "usgoffice.jpg"
+  }
+];
+
+function filterBuildings(query) {
+  if (!query) return [];
+  
+  const lowerCaseQuery = query.toLowerCase();
+  return buildings.filter(building => {
+    return building.name.toLowerCase().includes(lowerCaseQuery) ||
+           building.keywords.some(keyword => keyword.toLowerCase().includes(lowerCaseQuery));
+  });
+}
+
+function displayResults(results) {
+  searchResults.innerHTML = '';
+  
+  if (results.length === 0 && searchInput.value.trim() !== '') {
+    const noResults = document.createElement('div');
+    noResults.className = 'no-results';
+    noResults.innerHTML = '<i class="bx bx-search"></i><span>No buildings found</span>';
+    searchResults.appendChild(noResults);
+    searchResults.style.display = 'block';
+    return;
+  }
+  
+  if (results.length === 0) {
+    searchResults.style.display = 'none';
+    return;
+  }
+  
+  results.forEach(building => {
+    const resultItem = document.createElement('div');
+    resultItem.className = 'result-item';
+    
+    const imageDiv = document.createElement('div');
+    imageDiv.className = 'result-image';
+    
+    const img = document.createElement('img');
+    img.src = building.image;
+    img.alt = building.name;
+    img.onerror = function() {
+      this.style.display = 'none';
+      const fallbackText = document.createElement('div');
+      fallbackText.innerHTML = '<i class="bx bx-building"></i>';
+      imageDiv.appendChild(fallbackText);
+    };
+    
+    imageDiv.appendChild(img);
+    
+    const nameDiv = document.createElement('div');
+    nameDiv.className = 'result-name';
+    nameDiv.textContent = building.name;
+    
+    resultItem.appendChild(imageDiv);
+    resultItem.appendChild(nameDiv);
+    
+    resultItem.addEventListener('click', () => {
+      window.location.href = building.page;
+      searchInput.value = '';
+      searchResults.style.display = 'none';
+    });
+    
+    searchResults.appendChild(resultItem);
+  });
+  
+  searchResults.style.display = 'block';
+}
+
+searchInput.addEventListener('input', function() {
+  const query = this.value.trim();
+  const results = filterBuildings(query);
+  displayResults(results);
+});
+
+searchBtn.addEventListener('click', function() {
+  const query = searchInput.value.trim();
+  if (query) {
+    const results = filterBuildings(query);
+    if (results.length > 0) {
+      window.location.href = results[0].page;
+    }
+  }
+});
+
+// Hide results when clicking outside
+document.addEventListener('click', function(e) {
+  if (!document.querySelector('.search-container').contains(e.target)) {
+    searchResults.style.display = 'none';
+  }
+});
+
+// Sidebar toggle functionality
+const sidebar = document.querySelector(".sidebar");
+const toggleBtn = document.getElementById("toggleSidebar");
+const openBtn = document.getElementById("openSidebar");
+
+toggleBtn.addEventListener("click", () => {
+  sidebar.classList.add("hidden");
+  openBtn.style.display = "grid";
+});
+
+openBtn.addEventListener("click", () => {
+  sidebar.classList.remove("hidden");
+  openBtn.style.display = "none";
+});
+
+// ===========================================================
+// 3D View / 2D Navigation toggle
+// ===========================================================
+let leafletMapInitialized = false;
+
+function showMapView(view) {
+  const view3d = document.getElementById('view3d');
+  const view2d = document.getElementById('view2d');
+  const btn3d = document.getElementById('btn3d');
+  const btn2d = document.getElementById('btn2d');
+
+  if (view === '3d') {
+    view3d.classList.remove('hidden-view');
+    view2d.classList.remove('active');
+    btn3d.classList.add('active');
+    btn2d.classList.remove('active');
+  } else {
+    view3d.classList.add('hidden-view');
+    view2d.classList.add('active');
+    btn3d.classList.remove('active');
+    btn2d.classList.add('active');
+
+    if (!leafletMapInitialized) {
+      initLeafletNav();
+      leafletMapInitialized = true;
+    } else {
+      // Force Leaflet to recalculate container size now that #view2d is visible
+      setTimeout(() => { 
+        if (leafletMap) {
+          leafletMap.invalidateSize();
+          const bounds = [[0, 0], [MAP_H, MAP_W]];
+          leafletMap.fitBounds(bounds);
+        } 
+      }, 200);
+    }
+  }
+}
+
+// ===========================================================
+// 2D Navigation on the illustrated campus map.
+// The layout is loaded from campus-graph.json, which you export
+// from campus-map-editor.html. Until that file exists, a small
+// sample graph is used so the map still works.
+// ===========================================================
+let MAP_W = 1410, MAP_H = 840, MAP_IMAGE = "campus-map.jpg", METERS_PER_PIXEL = 0.35;
+const GRAPH_FILE = "campus-graph.json";
+
+// Leaflet's simple CRS has y pointing up, so flip y once, here.
+const toLL = (x, y) => [MAP_H - y, x];
+
+const navNodes = {};
+
+// Rough placeholder graph (pixel coordinates). Replace by tracing your own.
+function sampleGraph() {
+  const nodes = {};
+  const add = (id, x, y, type = "waypoint", name = null) => { nodes[id] = { x, y, type, name, connects_to: [] }; };
+  const link = (a, b) => { nodes[a].connects_to.push(b); nodes[b].connects_to.push(a); };
+
+  add("b1",  540, 375, "building", "Building 1");
+  add("b28", 740, 525, "building", "Building 28");
+  add("b22", 700, 612, "building", "Building 22");
+  add("b21", 560, 700, "building", "Building 21");
+  add("b3",  518, 706, "building", "Building 3");
+  add("circle", 525, 410);
+  add("main_1", 628, 395);
+  add("main_2", 628, 525);
+  add("main_3", 640, 615);
+  add("main_4", 640, 665);
+  add("south_road", 560, 712);
+
+  link("b1", "circle");      link("circle", "main_1");
+  link("main_1", "main_2");  link("main_2", "b28");
+  link("main_2", "main_3");  link("main_3", "b22");
+  link("main_3", "main_4");  link("main_4", "south_road");
+  link("south_road", "b21"); link("south_road", "b3");
+
+  return { image: MAP_IMAGE, width: MAP_W, height: MAP_H, metersPerPixel: METERS_PER_PIXEL, nodes };
+}
+
+async function loadGraph() {
+  let g;
+  try {
+    const url = new URL(GRAPH_FILE, document.baseURI).href;
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error("not found at " + url + " (HTTP " + res.status + ")");
+    try { g = await res.json(); }
+    catch (e) { throw new Error("found at " + url + " but it is not valid JSON (the server may be returning a web page instead)"); }
+    if (!g || !g.nodes || !g.width || !g.height) throw new Error("the JSON is missing nodes, width or height. Re-export it from the editor");
+  } catch (err) {
+    console.warn("Could not load " + GRAPH_FILE + ", using the sample graph.", err);
+    const st = document.getElementById('nav2dStatus');
+    if (st) st.textContent = "campus-graph.json failed: " + err.message + ". Showing sample graph.";
+    g = sampleGraph();
+  }
+  MAP_W = g.width; MAP_H = g.height; METERS_PER_PIXEL = g.metersPerPixel;  // image name comes from MAP_IMAGE above, not the JSON
+  Object.keys(navNodes).forEach(k => delete navNodes[k]);
+  Object.assign(navNodes, g.nodes);
+}
+
+// Straight-line distance in meters (the map is flat)
+function navDistance(a, b) {
+  return Math.hypot(a.x - b.x, a.y - b.y) * METERS_PER_PIXEL;
+}
+
+function findNavPath(startId, endId) {
+  const openSet = new Set([startId]);
+  const cameFrom = {}, gScore = {}, fScore = {};
+  Object.keys(navNodes).forEach(id => { gScore[id] = Infinity; fScore[id] = Infinity; });
+  gScore[startId] = 0;
+  fScore[startId] = navDistance(navNodes[startId], navNodes[endId]);
+
+  while (openSet.size > 0) {
+    let current = null, lowest = Infinity;
+    openSet.forEach(id => { if (fScore[id] < lowest) { lowest = fScore[id]; current = id; } });
+
+    if (current === endId) {
+      const path = [current];
+      while (cameFrom[current]) { current = cameFrom[current]; path.unshift(current); }
+      return path;
+    }
+    openSet.delete(current);
+
+    navNodes[current].connects_to.forEach(nid => {
+      const g = gScore[current] + navDistance(navNodes[current], navNodes[nid]);
+      if (g < gScore[nid]) {
+        cameFrom[nid] = current;
+        gScore[nid] = g;
+        fScore[nid] = g + navDistance(navNodes[nid], navNodes[endId]);
+        openSet.add(nid);
+      }
+    });
+  }
+  return null;
+}
+
+function getRouteStats(path) {
+  let meters = 0;
+  for (let i = 0; i < path.length - 1; i++) {
+    meters += navDistance(navNodes[path[i]], navNodes[path[i + 1]]);
+  }
+  return { meters: Math.round(meters), minutes: Math.max(1, Math.round(meters / 1.4 / 60)) };
+}
+
+let leafletMap, navRouteLine;
+
+async function initLeafletNav() {
+  await loadGraph();
+  const bounds = [[0, 0], [MAP_H, MAP_W]];
+
+  leafletMap = L.map('leafletMap', {
+    crs: L.CRS.Simple,
+    maxBounds: bounds,
+    maxBoundsViscosity: 1.0,
+    attributionControl: false
+  });
+
+  const imgOverlay = L.imageOverlay(MAP_IMAGE, bounds)
+    .on('error', () => console.error('Map image not found: ' + MAP_IMAGE))
+    .addTo(leafletMap);
+
+  // Set min zoom and fit bounds once the image overlay is ready
+  imgOverlay.once('load', () => {
+    leafletMap.invalidateSize();
+    const minZoomLevel = leafletMap.getBoundsZoom(bounds, true);
+    leafletMap.setMinZoom(0.3);
+    leafletMap.setMaxZoom(3);
+    leafletMap.fitBounds(bounds);
+  });
+
+  // Backup fit bounds in case image load event already fired
+  setTimeout(() => {
+    leafletMap.invalidateSize();
+    const minZoomLevel = leafletMap.getBoundsZoom(bounds, true);
+    leafletMap.setMinZoom(minZoomLevel);
+    leafletMap.setMaxZoom(2);
+    leafletMap.fitBounds(bounds);
+  }, 200);
+
+  // Draw path network edges
+  Object.entries(navNodes).forEach(([id, n]) => {
+    n.connects_to.forEach(nid => {
+      if (id < nid) {
+        const m = navNodes[nid];
+        L.polyline([toLL(n.x, n.y), toLL(m.x, m.y)], {
+          color: "#ffffff", weight: 2, opacity: 0.6, dashArray: "5 5"
+        }).addTo(leafletMap);
+      }
+    });
+  });
+
+  // Small dots for waypoints, big red dots for buildings.
+  Object.entries(navNodes).forEach(([id, n]) => {
+    const isBuilding = n.type === "building";
+    L.circleMarker(toLL(n.x, n.y), {
+      radius: isBuilding ? 7 : 3,
+      color: isBuilding ? "#d62828" : "#2f6b4f",
+      fillColor: isBuilding ? "#e85d5d" : "#5dcaa5",
+      fillOpacity: isBuilding ? 0.9 : 0.8,
+      weight: isBuilding ? 2 : 1
+    }).addTo(leafletMap).bindTooltip(isBuilding ? n.name : id);
+  });
+
+  const from = document.getElementById('nav2dFrom');
+  const to = document.getElementById('nav2dTo');
+  from.innerHTML = ''; to.innerHTML = '';
+  Object.entries(navNodes).filter(([, n]) => n.type === "building").forEach(([id, n]) => {
+    from.innerHTML += `<option value="${id}">${n.name}</option>`;
+    to.innerHTML += `<option value="${id}">${n.name}</option>`;
+  });
+  if (to.options.length > 1) to.selectedIndex = 1;
+}
+
+function find2DRoute() {
+  if (!leafletMap) return;
+  const startId = document.getElementById('nav2dFrom').value;
+  const endId = document.getElementById('nav2dTo').value;
+  if (startId === endId) return;
+  clear2DRoute();
+  const path = findNavPath(startId, endId);
+  const el = document.getElementById('nav2dStats');
+  if (!path) { if (el) el.textContent = "No connected path between these buildings."; return; }
+  navRouteLine = L.polyline(path.map(id => toLL(navNodes[id].x, navNodes[id].y)),
+    { color: "#fffa00", weight: 5, lineJoin: "round" }).addTo(leafletMap); // change nav line color here
+  leafletMap.fitBounds(navRouteLine.getBounds(), { padding: [40, 40] });
+
+  const s = getRouteStats(path);
+  if (el) el.textContent = `${s.meters} m, about ${s.minutes} min walk`;
+}
+
+function clear2DRoute() {
+  if (navRouteLine) { leafletMap.removeLayer(navRouteLine); navRouteLine = null; }
+  const el = document.getElementById('nav2dStats');
+  if (el) el.textContent = "";
+}
+
+// ==========================================
+// GPS TRACKING & CALIBRATION SETUP
+// ==========================================
+
+let userLocationMarker = null;
+let userAccuracyCircle = null;
+let gpsWatchId = null;
+
+//=======================
+// CALIBRATION POINTS
+// Pick two opposite corners on your campus image and find their exact GPS coordinates.
+// Replace these values with your actual calibrated coordinates.
+//=======================
+const GPS_CALIBRATION = {
+  // Point 1: Top-Left reference area
+  p1: { lat: 8.148120, lng: 123.840100, x: 120, y: 150 },
+  // Point 2: Bottom-Right reference area
+  p2: { lat: 8.145500, lng: 123.843500, x: 1250, y: 720 }
+};
+
+// Converts GPS (Lat, Lng) to Image Pixel Coordinates (X, Y)
+function gpsToPixel(lat, lng) {
+  const { p1, p2 } = GPS_CALIBRATION;
+
+  // Linear interpolation for X and Y pixel scaling
+  const percentX = (lng - p1.lng) / (p2.lng - p1.lng);
+  const percentY = (lat - p1.lat) / (p2.lat - p1.lat);
+
+  const x = p1.x + percentX * (p2.x - p1.x);
+  const y = p1.y + percentY * (p2.y - p1.y);
+
+  return { x, y };
+}
+
+// Toggles real-time GPS tracking on and off
+function toggleGPSTracking() {
+  if (gpsWatchId !== null) {
+    // Stop tracking
+    navigator.geolocation.clearWatch(gpsWatchId);
+    gpsWatchId = null;
+
+    if (userLocationMarker) leafletMap.removeLayer(userLocationMarker);
+    if (userAccuracyCircle) leafletMap.removeLayer(userAccuracyCircle);
+    userLocationMarker = null;
+    userAccuracyCircle = null;
+
+    document.getElementById("gpsBtn").innerText = "Enable Live GPS";
+    document.getElementById("nav2dStats").innerText = "GPS Tracking Disabled.";
+    return;
+  }
+
+  if (!("geolocation" in navigator)) {
+    alert("Geolocation is not supported by your browser.");
+    return;
+  }
+
+  document.getElementById("gpsBtn").innerText = "Locating...";
+
+  gpsWatchId = navigator.geolocation.watchPosition(
+    onGpsSuccess,
+    onGpsError,
+    {
+      enableHighAccuracy: true,
+      maximumAge: 2000,
+      timeout: 10000
+    }
+  );
+}
+
+// Geolocation Success Callback
+function onGpsSuccess(position) {
+  const lat = position.coords.latitude;
+  const lng = position.coords.longitude;
+  const accuracy = position.coords.accuracy; // in meters
+
+  // Convert GPS to Pixel Coordinates
+  const pix = gpsToPixel(lat, lng);
+  const leafletCoords = toLL(pix.x, pix.y);
+
+  // Check if position is within map boundaries
+  if (pix.x < 0 || pix.x > MAP_W || pix.y < 0 || pix.y > MAP_H) {
+    document.getElementById("nav2dStats").innerText = 
+      `GPS active, but you appear to be outside the mapped campus bounds.`;
+    return;
+  }
+
+  // Draw or update Accuracy Circle
+  const pixelAccuracyRadius = accuracy / METERS_PER_PIXEL;
+  if (!userAccuracyCircle) {
+    userAccuracyCircle = L.circle(leafletCoords, {
+      radius: pixelAccuracyRadius,
+      color: "#2196F3",
+      fillColor: "#2196F3",
+      fillOpacity: 0.15,
+      weight: 1
+    }).addTo(leafletMap);
+  } else {
+    userAccuracyCircle.setLatLng(leafletCoords);
+    userAccuracyCircle.setRadius(pixelAccuracyRadius);
+  }
+
+  // Draw or update Position Marker
+  if (!userLocationMarker) {
+    userLocationMarker = L.circleMarker(leafletCoords, {
+      radius: 8,
+      color: "#FFFFFF",
+      fillColor: "#007AFF",
+      fillOpacity: 1,
+      weight: 3
+    }).addTo(leafletMap).bindPopup("You are here");
+  } else {
+    userLocationMarker.setLatLng(leafletCoords);
+  }
+
+  document.getElementById("gpsBtn").innerText = "Disable Live GPS";
+  document.getElementById("nav2dStats").innerText = 
+    `Live GPS Active (Accuracy: ~${Math.round(accuracy)}m)`;
+}
+
+// Geolocation Error Callback
+function onGpsError(error) {
+  let message = "Unable to retrieve GPS location.";
+  switch (error.code) {
+    case error.PERMISSION_DENIED:
+      message = "Location access was denied. Please allow location permissions in your browser settings and check that your connection uses HTTPS.";
+      break;
+    case error.POSITION_UNAVAILABLE:
+      message = "Location information is unavailable. Ensure device GPS is turned on.";
+      break;
+    case error.TIMEOUT:
+      message = "Location request timed out. Please try again.";
+      break;
+  }
+  
+  const statsEl = document.getElementById("nav2dStats");
+  if (statsEl) statsEl.innerText = message;
+  
+  alert(message);
+  toggleGPSTracking(); // Reset button state
+}
+
+// Chatbot functionality - UPDATED FOR NETLIFY
+const chatBtn = document.getElementById('chatBtn');
+const chatBox = document.getElementById('chatBox');
+const chatBody = document.getElementById('chatBody');
+const chatInput = document.getElementById('chatInput');
+
+// Netlify functions URL - this will work both locally and on Netlify
+const SERVER_URL = window.location.origin + '/.netlify/functions';
+
+chatBtn.onclick = () => {
+  chatBox.style.display = chatBox.style.display === 'flex' ? 'none' : 'flex';
+  if (chatBox.style.display === 'flex') {
+    chatInput.focus();
+  }
+};
+
+// Allow pressing Enter to send message
+chatInput.addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') {
+    sendMessage();
+  }
+});
+
+function addMessage(sender, text) {
+  const msg = document.createElement('div');
+  msg.classList.add('msg', sender);
+  msg.innerText = text;
+  chatBody.appendChild(msg);
+  chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+function addLoadingIndicator() {
+  const loading = document.createElement('div');
+  loading.id = 'loading';
+  loading.classList.add('msg', 'bot', 'loading');
+  loading.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+  chatBody.appendChild(loading);
+  chatBody.scrollTop = chatBody.scrollHeight;
+  return loading;
+}
+
+function removeLoadingIndicator() {
+  const loading = document.getElementById('loading');
+  if (loading) {
+    loading.remove();
+  }
+}
+
+// Send message to Netlify function
+async function sendMessage() {
+  const message = chatInput.value.trim();
+  if (!message) return;
+
+  // Add user message
+  addMessage('user', message);
+  chatInput.value = '';
+  
+  // Show loading indicator
+  const loading = addLoadingIndicator();
+
+  try {
+    const response = await fetch(`${SERVER_URL}/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ message: message })
+    });
+
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    const data = await response.json();
+    
+    // Remove loading indicator
+    removeLoadingIndicator();
+    
+    // Add bot response
+    addMessage('bot', data.response);
+    
+  } catch (error) {
+    console.error('Error:', error);
+    removeLoadingIndicator();
+    addMessage('bot', "Sorry, I'm having trouble connecting right now. Please try again later.");
+  }
+}
+
+// Load initial options from Netlify function
+async function loadInitialOptions() {
+  try {
+    const response = await fetch(`${SERVER_URL}/options`);
+    const data = await response.json();
+    
+    const optionsDiv = document.createElement('div');
+    optionsDiv.classList.add('options');
+    
+    data.categories.forEach(category => {
+      const categoryTitle = document.createElement('div');
+      categoryTitle.className = 'category-title';
+      categoryTitle.textContent = category.name;
+      optionsDiv.appendChild(categoryTitle);
+      
+      category.questions.forEach(question => {
+        const btn = document.createElement('button');
+        btn.innerText = question;
+        btn.onclick = () => {
+          chatInput.value = question;
+          sendMessage();
+        };
+        optionsDiv.appendChild(btn);
+      });
+    });
+    
+    chatBody.appendChild(optionsDiv);
+    chatBody.scrollTop = chatBody.scrollHeight;
+    
+  } catch (error) {
+    console.error('Error loading options:', error);
+    // Fallback to local options
+    showLocalOptions();
+  }
+}
+
+function showLocalOptions() {
+  const optionsDiv = document.createElement('div');
+  optionsDiv.classList.add('options');
+  
+  const categories = [
+    {
+      name: "Admission Information",
+      questions: [
+        "How do I apply?",
+        "What are the requirements?",
+        "When is the application deadline?"
+      ]
+    },
+    {
+      name: "Tuition Fees",
+      questions: [
+        "How much is tuition?",
+        "Do you offer scholarships?",
+        "What payment methods are accepted?"
+      ]
+    },
+    {
+      name: "Campus Life", 
+      questions: [
+        "Are there dormitories?",
+        "What clubs are available?",
+        "What are the library hours?"
+      ]
+    }
+  ];
+  
+  categories.forEach(category => {
+    const categoryTitle = document.createElement('div');
+    categoryTitle.className = 'category-title';
+    categoryTitle.textContent = category.name;
+    optionsDiv.appendChild(categoryTitle);
+    
+    category.questions.forEach(question => {
+      const btn = document.createElement('button');
+      btn.innerText = question;
+      btn.onclick = () => {
+        chatInput.value = question;
+        sendMessage();
+      };
+      optionsDiv.appendChild(btn);
+    });
+  });
+  
+  chatBody.appendChild(optionsDiv);
+  chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+// Initialize chatbot when window loads
+window.addEventListener('load', () => {
+  addMessage('bot', "Hello! 👋 I'm the La Salle University AI Assistant. I can help you with:\n\n• Admission Information\n• Tuition Fees & Scholarships\n• Campus Life & Facilities\n• Application Process\n\nChoose a question below or type your own!");
+  loadInitialOptions();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>La Salle University - SB Building</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <script type="module" src="https://unpkg.com/@splinetool/viewer@1.12.3/build/spline-viewer.js"></script>
+  <style>
+    :root {
+      --primary: #00563F;
+      --primary-light: #007B5E;
+      --accent: #0b6f4e;
+      --secondary: #F6FFF8;
+      --text: #333333;
+      --text-light: #666666;
+      --white: #FFFFFF;
+      --gray: #F5F5F5;
+      --border: #E0E0E0;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      --radius: 12px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Inter", sans-serif;
+    }
+
+    body {
+      background-color: var(--gray);
+      color: var(--text);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+      color: var(--white);
+      text-align: center;
+      padding: 60px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,100 Z" fill="rgba(255,255,255,0.1)"/></svg>');
+      background-size: cover;
+    }
+
+    .header-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    header img {
+      width: 100px;
+      margin-bottom: 20px;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .building-tag {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      backdrop-filter: blur(10px);
+    }
+
+    /* Main building image */
+    .building-hero {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .building-image {
+      position: relative;
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      transition: transform 0.4s ease;
+    }
+
+    .building-image:hover {
+      transform: translateY(-5px);
+    }
+
+    .building-image img {
+      width: 100%;
+      height: 500px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .image-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.7));
+      color: white;
+      padding: 30px 20px 20px;
+    }
+
+    /* Content Sections */
+    .content-section {
+      max-width: 1200px;
+      margin: 60px auto;
+      padding: 0 20px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 30px;
+    }
+
+    .section-header i {
+      font-size: 1.8rem;
+      color: var(--primary);
+    }
+
+    .section-header h2 {
+      font-size: 1.8rem;
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    /* 3D Model Section */
+    .model-section {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .model-container {
+      position: relative;
+      width: 100%;
+      height: 500px;
+      overflow: hidden;
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    spline-viewer {
+      width: 100%;
+      height: 100%;
+    }
+
+    .model-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px;
+      background: var(--secondary);
+      border-top: 1px solid var(--border);
+    }
+
+    .model-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .model-info i {
+      font-size: 1.5rem;
+      color: var(--primary);
+    }
+
+    .model-btns {
+      display: flex;
+      gap: 10px;
+    }
+
+    .model-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .model-btn:hover {
+      background: var(--primary-light);
+      transform: translateY(-2px);
+    }
+
+    /* Slider Section */
+    .slider-container {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .slider {
+      display: flex;
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .slide {
+      min-width: 100%;
+      position: relative;
+    }
+
+    .slide img {
+      width: 100%;
+      height: 400px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .slide-caption {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.8));
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .slider-nav {
+      position: absolute;
+      top: 50%;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      transform: translateY(-50%);
+      padding: 0 20px;
+      z-index: 3;
+    }
+
+    .slider-nav button {
+      background: rgba(255, 255, 255, 0.9);
+      border: none;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: all 0.3s ease;
+      font-size: 1.2rem;
+      color: var(--primary);
+    }
+
+    .slider-nav button:hover {
+      background: var(--white);
+      transform: scale(1.1);
+    }
+
+    .slider-dots {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--border);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .dot.active {
+      background: var(--primary);
+      transform: scale(1.2);
+    }
+
+    /* Info section */
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-top: 40px;
+    }
+
+    .info-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 30px;
+      box-shadow: var(--shadow);
+      transition: transform 0.3s ease;
+    }
+
+    .info-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .info-card h3 {
+      color: var(--primary);
+      margin-bottom: 15px;
+      font-size: 1.3rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .info-card h3 i {
+      font-size: 1.5rem;
+    }
+
+    .info-card p {
+      color: var(--text-light);
+      margin-bottom: 15px;
+    }
+
+    .features-list {
+      list-style: none;
+      margin-top: 20px;
+    }
+
+    .features-list li {
+      padding: 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-light);
+    }
+
+    .features-list li i {
+      color: var(--primary);
+      font-size: 1.1rem;
+    }
+
+    /* Back Button */
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: fit-content;
+      margin: 60px auto;
+      padding: 14px 30px;
+      background: var(--primary);
+      color: white;
+      border-radius: 25px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: var(--shadow);
+    }
+
+    .back-btn:hover {
+      background: var(--primary-light);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(11, 111, 78, 0.3);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      header h1 {
+        font-size: 2rem;
+      }
+      
+      .building-image img {
+        height: 300px;
+      }
+      
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .model-controls {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+      }
+      
+      .slider-nav button {
+        width: 40px;
+        height: 40px;
+      }
+      
+      .model-container {
+        height: 400px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <img src="index1logo.png" alt="La Salle University Logo" />
+      <h1>Art Center Building</h1>
+      <div class="building-tag">Academic & Administrative Center</div>
+    </div>
+  </header>
+
+  <div class="building-hero">
+    <div class="building-image">
+      <img src="Screenshot 2025-11-10 161237.png" alt="Art Center Building Main Image">
+      <div class="image-overlay">
+        <h3>Main Entrance</h3>
+        <p>The primary access point to Art Center</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3D Model Section -->
+  <div class="content-section">
+    <div class="section-header">
+      <i class='bx bx-cube-alt'></i>
+      <h2>Location of Art Center</h2>
+    </div>
+    
+    <div class="model-section">
+      <div class="model-container">
+        <spline-viewer url="https://prod.spline.design/ccJSemDH5Ug8oz58/scene.splinecode"></spline-viewer>
+      </div>
+      <div class="model-controls">
+        <div class="model-info">
+          <i class='bx bx-mouse'></i>
+          <span>Drag to rotate, scroll to zoom</span>
+        </div>
+        <div class="model-btns">
+          <button class="model-btn" id="fullscreenBtn">
+            <i class='bx bx-fullscreen'></i>
+            Fullscreen
+          </button>
+          <button class="model-btn" id="resetBtn">
+            <i class='bx bx-reset'></i>
+            Reset View
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gallery Section -->
+  <div class="content-section">
+    <div class="section-header">
+      <i class='bx bx-images'></i>
+      <h2>Building Gallery</h2>
+    </div>
+    
+    <div class="slider-container">
+      <div class="slider" id="slider">
+        <div class="slide">
+          <img src="noimage.jpg" alt="SJ Building Interior">
+          <div class="slide-caption">Admission Office</div>
+        </div>
+        <div class="slide">
+          <img src="noimage.jpg" alt="Covered Court">
+          <div class="slide-caption">Main Entrance</div>
+        </div>
+      </div>
+      <div class="slider-nav">
+        <button id="prev"><i class='bx bx-chevron-left'></i></button>
+        <button id="next"><i class='bx bx-chevron-right'></i></button>
+      </div>
+      <div class="slider-dots" id="sliderDots"></div>
+    </div>
+  </div>
+
+  <!-- Building Information Section -->
+  <div class="content-section">
+    <div class="section-header">
+      <i class='bx bx-building'></i>
+      <h2>Building Information</h2>
+    </div>
+    
+    <div class="info-grid">
+      <div class="info-card">
+        <h3><i class='bx bx-info-circle'></i> About Art Center</h3>
+        <p>
+The Art Center serves as the university's primary venue for cultural performances, presentations, and special events. It provides a dedicated space for artistic expressions, concerts, and university gatherings.
+        </p>
+        <p>
+The facility supports the creative and cultural development of the campus community.
+        </p>
+      </div>
+      
+      <div class="info-card">
+        <h3><i class='bx bx-list-check'></i> Key Features</h3>
+        <ul class="features-list">
+          <li><i class='bx bx-check'></i> Modern classroom facilities</li>
+          <li><i class='bx bx-check'></i> Department offices</li>
+          <li><i class='bx bx-check'></i> Student collaboration spaces</li>
+          <li><i class='bx bx-check'></i> High-speed internet access</li>
+          <li><i class='bx bx-check'></i> Lorem ipsum</li>
+          <li><i class='bx bx-check'></i> Lorem ipsum</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <a href="https://lsuinteractivemap.netlify.app/index1.html" class="back-btn">
+    <i class='bx bx-arrow-back'></i>
+    Back to Campus Map
+  </a>
+
+  <script>
+    // Slider functionality
+    const slider = document.getElementById('slider');
+    const slides = document.querySelectorAll('.slide');
+    const prev = document.getElementById('prev');
+    const next = document.getElementById('next');
+    const sliderDots = document.getElementById('sliderDots');
+    let index = 0;
+
+    // Create dots
+    slides.forEach((_, i) => {
+      const dot = document.createElement('div');
+      dot.classList.add('dot');
+      if (i === 0) dot.classList.add('active');
+      dot.addEventListener('click', () => showSlide(i));
+      sliderDots.appendChild(dot);
+    });
+
+    function showSlide(i) {
+      index = (i + slides.length) % slides.length;
+      slider.style.transform = `translateX(${-index * 100}%)`;
+      
+      // Update dots
+      document.querySelectorAll('.dot').forEach((dot, i) => {
+        dot.classList.toggle('active', i === index);
+      });
+    }
+
+    prev.addEventListener('click', () => showSlide(index - 1));
+    next.addEventListener('click', () => showSlide(index + 1));
+
+    // Auto-slide every 5 seconds
+    setInterval(() => showSlide(index + 1), 5000);
+
+    // 3D Model functionality
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const splineViewer = document.querySelector('spline-viewer');
+
+    fullscreenBtn.addEventListener('click', () => {
+      if (splineViewer.requestFullscreen) {
+        splineViewer.requestFullscreen();
+      } else if (splineViewer.webkitRequestFullscreen) {
+        splineViewer.webkitRequestFullscreen();
+      } else if (splineViewer.msRequestFullscreen) {
+        splineViewer.msRequestFullscreen();
+      }
+    });
+
+    resetBtn.addEventListener('click', () => {
+      // This would reset the camera position in a real implementation
+      // For now, we'll just reload the viewer
+      const currentUrl = splineViewer.getAttribute('url');
+      splineViewer.setAttribute('url', '');
+      setTimeout(() => {
+        splineViewer.setAttribute('url', currentUrl);
+      }, 100);
+    });
+  </script>
+</body>
+</html>
