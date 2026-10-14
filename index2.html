@@ -744,8 +744,8 @@ async function initLeafletNav() {
     leafletMap.fitBounds(bounds);
   }, 200);
 
-  // Draw path network edges
-  Object.entries(navNodes).forEach(([id, n]) => {
+  // Draw path network edges - The broken lines on 2D map 
+  /*Object.entries(navNodes).forEach(([id, n]) => {
     n.connects_to.forEach(nid => {
       if (id < nid) {
         const m = navNodes[nid];
@@ -754,18 +754,19 @@ async function initLeafletNav() {
         }).addTo(leafletMap);
       }
     });
-  });
+  }); */
 
   // Small dots for waypoints, big red dots for buildings.
   Object.entries(navNodes).forEach(([id, n]) => {
-    const isBuilding = n.type === "building";
-    L.circleMarker(toLL(n.x, n.y), {
-      radius: isBuilding ? 7 : 3,
-      color: isBuilding ? "#d62828" : "#2f6b4f",
-      fillColor: isBuilding ? "#e85d5d" : "#5dcaa5",
-      fillOpacity: isBuilding ? 0.9 : 0.8,
-      weight: isBuilding ? 2 : 1
-    }).addTo(leafletMap).bindTooltip(isBuilding ? n.name : id);
+    if (n.type === "building") {
+      L.circleMarker(toLL(n.x, n.y), {
+        radius: 7,
+        color: "#d62828",
+        fillColor: "#e85d5d",
+        fillOpacity: 0.9,
+        weight: 2
+      }).addTo(leafletMap).bindTooltip(n.name);
+    }
   });
 
   const from = document.getElementById('nav2dFrom');
