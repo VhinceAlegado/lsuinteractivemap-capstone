@@ -8,6 +8,7 @@
   <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
+    
     .view-toggle {
       position: fixed;
       top: 16px;
@@ -110,6 +111,39 @@
     .sidebar.hidden {
       transform: translateX(-100%);
     }
+
+    .user-location-dot {  /* Custom Pulse Marker Styling */
+      width: 14px;
+      height: 14px;
+      background-color: #007AFF;
+      border: 2px solid #FFFFFF;
+      border-radius: 50%;
+      box-shadow: 0 0 8px rgba(0, 122, 255, 0.8);
+      position: relative;
+    }
+
+    .user-location-dot::after {
+      content: '';
+      position: absolute;
+      top: -6px;
+      left: -6px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid #007AFF;
+      animation: gps-pulse 1.8s infinite ease-out;
+    }
+
+    @keyframes gps-pulse {
+      0% {
+        transform: scale(0.6);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1.8);
+        opacity: 0;
+      }
+}
   </style>
 </head>
 
@@ -888,13 +922,13 @@ function onGpsSuccess(position) {
     return;
   }
 
-  // Draw or update Accuracy Circle
+  // 1. Draw or update Accuracy Circle
   const pixelAccuracyRadius = accuracy / METERS_PER_PIXEL;
   if (!userAccuracyCircle) {
     userAccuracyCircle = L.circle(leafletCoords, {
       radius: pixelAccuracyRadius,
-      color: "#2196F3",
-      fillColor: "#2196F3",
+      color: "#007AFF",
+      fillColor: "#007AFF",
       fillOpacity: 0.15,
       weight: 1
     }).addTo(leafletMap);
@@ -903,17 +937,28 @@ function onGpsSuccess(position) {
     userAccuracyCircle.setRadius(pixelAccuracyRadius);
   }
 
-  // Draw or update Position Marker
+  // 2. Custom "You are here" Icon Definition
+  const locationIcon = L.divIcon({
+    className: 'custom-gps-marker',
+    html: '<div class="user-location-dot"></div>',
+    iconSize: [18, 18],
+    iconAnchor: [9, 9]
+  });
+
+  // 3. Draw or update Marker with "You are here" label
   if (!userLocationMarker) {
-    userLocationMarker = L.circleMarker(leafletCoords, {
-      radius: 8,
-      color: "#FFFFFF",
-      fillColor: "#007AFF",
-      fillOpacity: 1,
-      weight: 3
-    }).addTo(leafletMap).bindPopup("You are here");
+    userLocationMarker = L.marker(leafletCoords, { icon: locationIcon })
+      .addTo(leafletMap)
+      .bindTooltip("You are here", { 
+        permanent: true, 
+        direction: "top", 
+        offset: [0, -10],
+        className: "gps-tooltip"
+      })
+      .bindPopup("<b>You are here</b><br>Accuracy: ~" + Math.round(accuracy) + "m");
   } else {
     userLocationMarker.setLatLng(leafletCoords);
+    userLocationMarker.getPopup().setContent("<b>You are here</b><br>Accuracy: ~" + Math.round(accuracy) + "m");
   }
 
   document.getElementById("gpsBtn").innerText = "Disable Live GPS";
