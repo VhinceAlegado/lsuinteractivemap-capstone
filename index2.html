@@ -844,23 +844,25 @@ let userLocationMarker = null;
 let userAccuracyCircle = null;
 let gpsWatchId = null;
 
-//=======================
-// CALIBRATION POINTS
-// Pick two opposite corners on your campus image and find their exact GPS coordinates.
-// Replace these values with your actual calibrated coordinates.
-//=======================
+/**
+ * CALIBRATION POINTS
+ * Primary coordinates provided for Burgos Gate (p1) and Oval (p2).
+ * Pixel coordinates (x, y) should match where these spots sit on your map image.
+ */
 const GPS_CALIBRATION = {
-  // Point 1: Top-Left reference area
-  p1: { lat: 8.150532386625523, lng: 123.84430289115437, x: 120, y: 150 },
-  // Point 2: Bottom-Right reference area
-  p2: { lat: 8.148053738745109, lng: 123.84536692142693, x: 1250, y: 720 }
+  // Burgos Gate (p1)
+  p1: { lat: 8.148051647993354, lng: 123.84536532533062, x: 120, y: 150 },
+  // Oval (p2)
+  p2: { lat: 8.149348869567486, lng: 123.84714313116982, x: 1250, y: 720 }
 };
 
-// Converts GPS (Lat, Lng) to Image Pixel Coordinates (X, Y)
+/**
+ * Converts real GPS (Lat, Lng) to Image Pixel Coordinates (X, Y)
+ */
 function gpsToPixel(lat, lng) {
   const { p1, p2 } = GPS_CALIBRATION;
 
-  // Linear interpolation for X and Y pixel scaling
+  // Linear interpolation based on p1 (Burgos Gate) and p2 (Oval)
   const percentX = (lng - p1.lng) / (p2.lng - p1.lng);
   const percentY = (lat - p1.lat) / (p2.lat - p1.lat);
 
@@ -870,10 +872,11 @@ function gpsToPixel(lat, lng) {
   return { x, y };
 }
 
-// Toggles real-time GPS tracking on and off
+/**
+ * Toggles real-time GPS tracking on and off
+ */
 function toggleGPSTracking() {
   if (gpsWatchId !== null) {
-    // Stop tracking
     navigator.geolocation.clearWatch(gpsWatchId);
     gpsWatchId = null;
 
@@ -894,31 +897,41 @@ function toggleGPSTracking() {
 
   document.getElementById("gpsBtn").innerText = "Locating...";
 
+  // Force physical GPS hardware chip and disable stale cached fixes
   gpsWatchId = navigator.geolocation.watchPosition(
     onGpsSuccess,
     onGpsError,
     {
       enableHighAccuracy: true,
-      maximumAge: 2000,
+      maximumAge: 0,
       timeout: 10000
     }
   );
 }
 
-// Geolocation Success Callback
+/**
+ * Geolocation Success Callback
+ */
 function onGpsSuccess(position) {
   const lat = position.coords.latitude;
   const lng = position.coords.longitude;
-  const accuracy = position.coords.accuracy; // in meters
+  const accuracy = position.coords.accuracy; // accuracy radius in meters
 
-  // Convert GPS to Pixel Coordinates
+  // Filter out weak GPS signals (e.g., indoor Wi-Fi positioning)
+  if (accuracy > 35) {
+    document.getElementById("nav2dStats").innerText = 
+      `Weak GPS signal (~${Math.round(accuracy)}m). Move outdoors for better accuracy.`;
+    return;
+  }
+
+  // Convert real GPS to Map Pixel Coordinates
   const pix = gpsToPixel(lat, lng);
   const leafletCoords = toLL(pix.x, pix.y);
 
-  // Check if position is within map boundaries
+  // Check map bounds
   if (pix.x < 0 || pix.x > MAP_W || pix.y < 0 || pix.y > MAP_H) {
     document.getElementById("nav2dStats").innerText = 
-      `GPS active, but you appear to be outside the mapped campus bounds.`;
+      `GPS active, but calculated position is outside campus image bounds.`;
     return;
   }
 
@@ -937,7 +950,7 @@ function onGpsSuccess(position) {
     userAccuracyCircle.setRadius(pixelAccuracyRadius);
   }
 
-  // 2. Custom "You are here" Icon Definition
+  // 2. Custom "You are here" Marker
   const locationIcon = L.divIcon({
     className: 'custom-gps-marker',
     html: '<div class="user-location-dot"></div>',
@@ -945,7 +958,6 @@ function onGpsSuccess(position) {
     iconAnchor: [9, 9]
   });
 
-  // 3. Draw or update Marker with "You are here" label
   if (!userLocationMarker) {
     userLocationMarker = L.marker(leafletCoords, { icon: locationIcon })
       .addTo(leafletMap)
