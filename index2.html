@@ -851,14 +851,12 @@ let gpsWatchId = null;
  */
 const GPS_CALIBRATION = {
   // Burgos Gate (p1)
-  p1: { lat: 8.148051647993354, lng: 123.84536532533062, x: 120, y: 150 },
+  p1: { lat: 8.148051647993354, lng: 123.84536532533062, x: 595, y: 71 },
   // Oval (p2)
-  p2: { lat: 8.149348869567486, lng: 123.84714313116982, x: 1250, y: 720 }
+  p2: { lat: 8.149348869567486, lng: 123.84714313116982, x: 523, y: 608 }
 };
 
-/**
- * Converts real GPS (Lat, Lng) to Image Pixel Coordinates (X, Y)
- */
+//Converts real GPS (Lat, Lng) to Image Pixel Coordinates (X, Y)
 function gpsToPixel(lat, lng) {
   const { p1, p2 } = GPS_CALIBRATION;
 
@@ -909,9 +907,7 @@ function toggleGPSTracking() {
   );
 }
 
-/**
- * Geolocation Success Callback
- */
+// Geolocation Success Callback
 function onGpsSuccess(position) {
   const lat = position.coords.latitude;
   const lng = position.coords.longitude;
