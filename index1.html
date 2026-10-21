@@ -53,27 +53,97 @@
       top: 70px;
       right: 16px;
       z-index: 1000;
-      background: rgba(255,255,255,0.95);
-      padding: 10px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+      background: rgba(255,255,255,0.97);
+      padding: 14px;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
       font-size: 13px;
       display: flex;
       flex-direction: column;
+      gap: 8px;
+      width: 240px;
+    }
+    .nav2d-title {
+      font-weight: 700;
+      color: #1b4332;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
       gap: 6px;
-      min-width: 180px;
+      margin-bottom: 4px;
+    }
+    .nav2d-field {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .nav2d-field label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #555;
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
     #nav2d-controls select, #nav2d-controls button {
-      padding: 6px 8px;
+      padding: 8px 10px;
       font-size: 13px;
-      border-radius: 6px;
+      border-radius: 8px;
       border: 1px solid #ccc;
     }
     #nav2d-controls button {
-      background: #40916c;
+      background: #1b4332;
       color: white;
       border: none;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-weight: 600;
+      transition: background 0.15s ease;
+    }
+    #nav2d-controls button:hover {
+      background: #2d6a4f;
+    }
+    #swapBtn {
+      align-self: center;
+      background: #eef4f0 !important;
+      color: #1b4332 !important;
+      width: 32px;
+      height: 32px;
+      padding: 0 !important;
+      border-radius: 50% !important;
+      font-size: 16px;
+      margin: -2px 0;
+    }
+    #swapBtn:hover {
+      background: #dcebe2 !important;
+    }
+    #myLocationBtn {
+      background: #2d6a4f !important;
+    }
+    #clearRouteBtn {
+      background: #b3261e !important;
+    }
+    #routeSummary {
+      margin-top: 4px;
+      background: #eef4f0;
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: #1b4332;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    #routeSummary strong {
+      font-size: 14px;
+    }
+    .nav-route-animated {
+      stroke-dasharray: 10 8;
+      animation: navDashFlow 1s linear infinite;
+    }
+    @keyframes navDashFlow {
+      to { stroke-dashoffset: -18; }
     }
 
     /* FIX: make the sidebar float on top of the map instead of pushing it
@@ -94,7 +164,6 @@
     }
     #nav2d-controls {
       left: auto !important;
-      width: auto !important;
     }
     .sidebar {
       position: fixed !important;
@@ -106,6 +175,200 @@
     }
     .sidebar.hidden {
       transform: translateX(-100%);
+    }
+
+    /* Building hotspot markers */
+    .building-hotspot {
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transform: translate(-50%, -100%);
+    }
+    .hotspot-pin {
+      width: 18px;
+      height: 18px;
+      border-radius: 50% 50% 50% 0;
+      background: #d62828;
+      border: 2px solid #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+      transform: rotate(-45deg);
+      transition: transform 0.15s ease;
+    }
+    .building-hotspot:hover .hotspot-pin {
+      transform: rotate(-45deg) scale(1.2);
+    }
+    .hotspot-label {
+      margin-top: 4px;
+      background: rgba(27,67,50,0.95);
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    /* ============================================================
+       MINI POPUP - small card that appears right above a marker
+       when it's clicked. Pointer triangle, spring-ish entrance.
+       ============================================================ */
+    .mini-popup {
+      position: fixed;
+      z-index: 4500;
+      width: 220px;
+      background: #1b4332;
+      color: #fff;
+      border-radius: 14px;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.35);
+      padding: 10px;
+      opacity: 0;
+      transform: translate(-50%, calc(-100% - 16px)) scale(0.85);
+      transform-origin: bottom center;
+      transition: opacity 0.22s cubic-bezier(0.34,1.56,0.64,1),
+                  transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      pointer-events: none;
+    }
+    .mini-popup.open {
+      opacity: 1;
+      transform: translate(-50%, calc(-100% - 16px)) scale(1);
+      pointer-events: auto;
+    }
+    .mini-popup::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      bottom: -8px;
+      transform: translateX(-50%);
+      border-width: 8px 8px 0 8px;
+      border-style: solid;
+      border-color: #1b4332 transparent transparent transparent;
+    }
+    .mini-popup img {
+      width: 100%;
+      height: 90px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      background: linear-gradient(#bcd9f7, #d8ecc9);
+    }
+    .mini-popup h4 {
+      margin: 0 0 4px;
+      font-size: 14px;
+      color: #fff;
+    }
+    .mini-popup p {
+      margin: 0 0 8px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #dfece3;
+    }
+    .mini-popup .read-more {
+      background: none;
+      border: none;
+      color: #8ecfff;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      padding: 4px 0;
+      pointer-events: auto;
+      position: relative;
+      z-index: 1;
+    }
+    .mini-popup .read-more:hover {
+      text-decoration: underline;
+    }
+
+    /* ============================================================
+       BIG CARD (#infoCard) - opened via the mini popup's "Read More".
+       A floating, rounded card on the right side, sitting just below
+       the 3D View / 2D Navigation bar. It is not attached to any
+       screen edge. It stays in the DOM and slides/fades in using
+       transform + opacity for a smooth animation.
+       ============================================================ */
+    #infoCard {
+      display: block !important;
+      position: fixed !important;
+      top: 84px !important;
+      right: 16px !important;
+      left: auto !important;
+      bottom: 24px !important;
+      width: 300px !important;
+      height: auto !important;
+      max-height: none !important;
+      box-sizing: border-box !important;
+      padding: 12px !important;
+      overflow-y: auto !important;
+      scrollbar-width: thin;
+      border-radius: 20px !important;
+      background: #1b4332 !important;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.32) !important;
+      z-index: 4000 !important;
+      transform: translateX(calc(100% + 40px));
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.45s cubic-bezier(0.32,0.72,0,1),
+                  opacity 0.3s ease;
+    }
+    #infoCard.open {
+      transform: translateX(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #infoCard .pad {
+      padding: 18px 8px 12px;
+      text-align: center;
+    }
+    #infoCard h3 {
+      color: #fff;
+      font-size: 19px;
+      margin: 0 0 10px;
+    }
+    #infoCard p {
+      color: #dfece3;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    #cardImg {
+      width: 100% !important;
+      height: 190px !important;
+      object-fit: cover !important;
+      border-radius: 14px !important;
+      display: block;
+      background: linear-gradient(#bcd9f7, #d8ecc9);
+    }
+    #cardClose {
+      position: absolute;
+      top: 22px;
+      right: 22px;
+      background: rgba(0,0,0,0.45);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      line-height: 1;
+      z-index: 10;
+    }
+    #cardClose:hover {
+      background: rgba(0,0,0,0.7);
+    }
+    #cardLink {
+      display: inline-block;
+      margin-top: 8px;
+      background: #fff;
+      color: #1b4332;
+      padding: 9px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
     }
   </style>
 </head>
@@ -257,6 +520,10 @@
 
     interaction-prompt="none"
 
+    auto-rotate
+    auto-rotate-delay="3000"
+    rotation-per-second="10deg"
+
     style="width:100%; height:100vh; display:block; border:none; background:#dfe3e6;">
 
     <div class="mv-progress-bar" slot="progress-bar">
@@ -267,21 +534,26 @@
 </div>
 </div>
 
-<!-- 2D Navigation View (point-to-point routing) -->
+<!-- 2D Navigation View (custom campus image with point-to-point routing) -->
 <div id="view2d">
   <div id="nav2d-controls">
-    <label>From:</label>
-    <select id="nav2dFrom"></select>
-    <label>To:</label>
-    <select id="nav2dTo"></select>
-    <button onclick="find2DRoute()">Find Route</button>
-    <button onclick="clear2DRoute()">Clear</button>
-    <span id="nav2dStats"></span>
-    <span id="nav2dStatus" style="font-size:12px;color:#b00020;max-width:220px"></span>
+    <div class="nav2d-title"><i class='bx bx-map-alt'></i> Campus Navigator</div>
+    <div class="nav2d-field">
+      <label><i class='bx bx-radio-circle-marker' style="color:#2d9d5f;"></i> From</label>
+      <select id="nav2dFrom"></select>
+    </div>
+    <button id="swapBtn" onclick="swap2DRoute()" title="Swap start and end"><i class='bx bx-transfer-alt'></i></button>
+    <div class="nav2d-field">
+      <label><i class='bx bx-map-pin' style="color:#d62828;"></i> To</label>
+      <select id="nav2dTo"></select>
+    </div>
+    <button id="findRouteBtn" onclick="find2DRoute()"><i class='bx bx-directions'></i> Find Route</button>
+    <button id="clearRouteBtn" onclick="clear2DRoute()"><i class='bx bx-x'></i> Clear</button>
+    <div id="nav2dStats"></div>
+    <div id="nav2dStatus" style="font-size:12px;color:#b00020;max-width:220px"></div>
   </div>
   <div id="leafletMap" style="height: 100%; width: 100%;"></div>
 </div>
-
 <style>
   .mv-progress-bar {
     display: block;
@@ -306,6 +578,13 @@
 </style>
 
 <script>
+  // model-viewer lowers its render resolution while the camera moves when the
+  // frame rate drops - that is the blur seen during auto-rotate. Setting the
+  // minimum render scale to 1 keeps full sharpness all the time.
+  customElements.whenDefined('model-viewer').then(() => {
+    customElements.get('model-viewer').minimumRenderScale = 1;
+  });
+
   const mapModelViewer = document.querySelector('#map model-viewer');
   if (mapModelViewer) {
     mapModelViewer.addEventListener('progress', (event) => {
@@ -314,17 +593,36 @@
       if (progressBar) progressBar.style.width = `${event.detail.totalProgress * 100}%`;
       if (container) container.style.display = event.detail.totalProgress === 1 ? 'none' : 'block';
     });
+
+    // If the user manually drags/rotates the model while the mini popup is
+    // open, its position would go stale (it's anchored to a screen point,
+    // not the 3D point) - so just dismiss it rather than let it drift.
+    mapModelViewer.addEventListener('camera-change', (event) => {
+      if (event.detail && event.detail.source === 'user-interaction') {
+        if (typeof onUserCameraInteraction === 'function') onUserCameraInteraction();
+      }
+    });
   }
 </script>
 
 
 
-<!-- Card for building info -->
+<!-- Small popup shown first when a marker is clicked -->
+<div class="mini-popup" id="miniPopup">
+  <img src="" alt="" id="miniImg" />
+  <h4 id="miniTitle"></h4>
+  <p id="miniDesc"></p>
+  <button class="read-more" onclick="openReadMore()">READ MORE &gt;&gt;</button>
+</div>
+
+<!-- Bigger slide-in panel, opened via "Read More" -->
 <div class="card" id="infoCard">
+  <button id="cardClose" onclick="closeCard()">✕</button>
   <img src="" alt="Building" id="cardImg" />
   <div class="pad">
     <h3 id="cardTitle"></h3>
     <p id="cardDesc"></p>
+    <a id="cardLink" href="#" style="display:none;">View Details</a>
   </div>
 </div>
 
@@ -350,11 +648,339 @@ document.getElementById('catToggle').onclick = () => {
   icon.className = subcats.style.display === 'flex' ? 'bx bx-chevron-up' : 'bx bx-chevron-down';
 };
 
-function showCard(title, img, desc) {
-  document.getElementById('infoCard').style.display = 'block';
+// ===========================================================
+// Two-stage building info popups:
+// 1. Clicking a marker opens a small popup right above it.
+// 2. Clicking "Read More" on that popup opens the full slide-in panel.
+// Auto-rotate is paused while either is open, so the popup doesn't
+// drift away from its marker and so the model holds still while
+// someone's reading.
+// ===========================================================
+let currentPopupBuilding = null;
+let popupRequestId = 0;     // a newer click (or a drag) cancels an older pending popup
+let viewBeforeZoom = null;  // camera view saved before the first marker zoom
+let cameraMoves = 0;        // how many scripted camera moves are in progress
+let defaultDecay = null;    // model-viewer's normal camera smoothing value
+
+// ---- Zoom settings (easy to tweak) ----
+const ZOOM_FOV_FACTOR = 0.78; // smaller = closer. 0.78 is a gentle zoom. 1 = no zoom.
+const ZOOM_PAN_AMOUNT = 0.35; // how far the view slides toward the marker (0 to 1)
+const SMOOTH_DECAY = 120;     // higher = slower, softer camera movement
+
+function getModelViewerEl() {
+  return document.querySelector('#map model-viewer');
+}
+
+function pauseAutoRotateForPopup() {
+  const mv = getModelViewerEl();
+  if (mv && mv.hasAttribute('auto-rotate')) {
+    mv.dataset.wasAutoRotating = 'true';
+    mv.removeAttribute('auto-rotate');
+  }
+}
+
+function resumeAutoRotate() {
+  const mv = getModelViewerEl();
+  if (mv && mv.dataset.wasAutoRotating === 'true') {
+    mv.setAttribute('auto-rotate', '');
+    mv.dataset.wasAutoRotating = 'false';
+  }
+}
+
+function isAnyPopupOpen() {
+  return document.getElementById('miniPopup').classList.contains('open') ||
+         document.getElementById('infoCard').classList.contains('open');
+}
+
+// Waits until the camera has stopped moving, then runs the callback.
+function whenCameraSettled(mv, callback) {
+  const start = performance.now();
+  let lastChange = start;
+  let finished = false;
+  const onChange = () => { lastChange = performance.now(); };
+  mv.addEventListener('camera-change', onChange);
+
+  const tick = () => {
+    if (finished) return;
+    const now = performance.now();
+    const elapsed = now - start;
+    if ((elapsed > 450 && now - lastChange > 140) || elapsed > 1800) {
+      finished = true;
+      mv.removeEventListener('camera-change', onChange);
+      callback();
+      return;
+    }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+function readFov(mv) {
+  if (typeof mv.getFieldOfView === 'function') return mv.getFieldOfView();
+  return parseFloat(mv.getAttribute('field-of-view')) || 25;
+}
+
+// Smoothly moves the camera target and field of view, then calls done().
+function moveCamera(mv, target, fov, done) {
+  if (defaultDecay === null) defaultDecay = mv.interpolationDecay || 50;
+  cameraMoves++;
+  mv.interpolationDecay = SMOOTH_DECAY;
+  mv.cameraTarget = `${target.x.toFixed(3)}m ${target.y.toFixed(3)}m ${target.z.toFixed(3)}m`;
+  mv.fieldOfView = `${fov.toFixed(2)}deg`;
+  whenCameraSettled(mv, () => {
+    cameraMoves--;
+    if (cameraMoves === 0) mv.interpolationDecay = defaultDecay;
+    done();
+  });
+}
+
+// A small zoom toward the clicked marker. The orbit angle is not touched,
+// so the building you clicked stays in the same direction, just closer.
+function zoomTowardMarker(mv, markerEl, done) {
+  const pos = (markerEl.getAttribute('data-position') || '').trim().split(/\s+/).map(Number);
+  if (pos.length !== 3 || pos.some(isNaN)) { done(); return; }
+
+  if (!viewBeforeZoom) {
+    viewBeforeZoom = { target: mv.getCameraTarget(), fov: readFov(mv) };
+  }
+  const base = viewBeforeZoom;
+  const target = {
+    x: base.target.x + (pos[0] - base.target.x) * ZOOM_PAN_AMOUNT,
+    y: base.target.y + (pos[1] - base.target.y) * ZOOM_PAN_AMOUNT,
+    z: base.target.z + (pos[2] - base.target.z) * ZOOM_PAN_AMOUNT
+  };
+  moveCamera(mv, target, base.fov * ZOOM_FOV_FACTOR, done);
+}
+
+// Smoothly goes back to the view from before the zoom, then resumes auto-rotate.
+function restoreViewAndResume() {
+  const mv = getModelViewerEl();
+  if (!mv) return;
+  if (!viewBeforeZoom) { resumeAutoRotate(); return; }
+
+  const myId = popupRequestId;
+  const v = viewBeforeZoom;
+  moveCamera(mv, v.target, v.fov, () => {
+    if (myId !== popupRequestId) return; // a new popup started meanwhile
+    viewBeforeZoom = null;
+    if (!isAnyPopupOpen()) resumeAutoRotate();
+  });
+}
+
+function maybeRestoreView() {
+  if (!isAnyPopupOpen()) restoreViewAndResume();
+}
+
+// Called when the user drags/zooms the model themselves. They are now in
+// control, so we cancel pending popups and forget the saved view.
+function onUserCameraInteraction() {
+  if (cameraMoves > 0) return; // ignore events caused by our own camera moves
+  viewBeforeZoom = null;
+  popupRequestId++;
+  document.getElementById('miniPopup').classList.remove('open');
+  if (!isAnyPopupOpen()) resumeAutoRotate();
+}
+
+function closeAllBuildingPopups() {
+  popupRequestId++;
+  document.getElementById('miniPopup').classList.remove('open');
+  document.getElementById('infoCard').classList.remove('open');
+  restoreViewAndResume();
+}
+
+function showMiniPopup(building, markerEl) {
+  const mv = getModelViewerEl();
+  const myId = ++popupRequestId;
+  currentPopupBuilding = building;
+
+  // Reset anything already open so the new popup animates in fresh
+  const popup = document.getElementById('miniPopup');
+  popup.classList.remove('open');
+  document.getElementById('infoCard').classList.remove('open');
+
+  document.getElementById('miniImg').src = building.image || '';
+  document.getElementById('miniTitle').innerText = building.name;
+  document.getElementById('miniDesc').innerText = 'Tap "Read More" to learn more about this building.';
+
+  pauseAutoRotateForPopup();
+
+  // Runs after the camera has finished zooming, so the popup is placed
+  // using the marker's FINAL position on screen.
+  const openPopup = () => {
+    if (myId !== popupRequestId) return; // cancelled by another click or a drag
+
+    const rect = markerEl.getBoundingClientRect();
+    const halfWidth = 110; // half of the popup's 220px width
+    const left = Math.min(Math.max(rect.left + rect.width / 2, halfWidth + 8), window.innerWidth - halfWidth - 8);
+    let top = rect.top;
+
+    popup.style.left = left + 'px';
+    popup.style.top = top + 'px';
+    popup.classList.add('open');
+
+    // The popup opens ABOVE the marker. For markers near the top of the
+    // screen, nudge it down so the whole popup (and Read More) stays visible.
+    requestAnimationFrame(() => {
+      const popupRect = popup.getBoundingClientRect();
+      const minTop = 90; // stay clear of the 3D/2D toggle bar
+      if (popupRect.top < minTop) {
+        top += (minTop - popupRect.top);
+        popup.style.top = top + 'px';
+      }
+    });
+  };
+
+  if (mv) zoomTowardMarker(mv, markerEl, openPopup);
+  else openPopup();
+}
+
+// restoreView = false keeps the zoom (used when switching to the big card)
+function hideMiniPopup(restoreView = true) {
+  popupRequestId++; // cancels any popup still waiting for the camera
+  document.getElementById('miniPopup').classList.remove('open');
+  if (restoreView) maybeRestoreView();
+}
+
+function openReadMore() {
+  if (!currentPopupBuilding) return;
+  const b = currentPopupBuilding;
+  showCard(b.name, b.image, 'Tap "View Details" to learn more about this building.', b.page);
+  hideMiniPopup(false); // close the small popup, but stay zoomed in
+}
+
+function closeCard() {
+  document.getElementById('infoCard').classList.remove('open');
+  maybeRestoreView();
+}
+
+// Clicks inside the popup itself should never trigger the
+// outside-click-closes-it logic below.
+document.getElementById('miniPopup').addEventListener('click', (e) => {
+  e.stopPropagation();
+});
+
+// Clicking anywhere outside the mini popup or a marker dismisses it
+document.addEventListener('click', (e) => {
+  const popup = document.getElementById('miniPopup');
+  if (popup.classList.contains('open') &&
+      !popup.contains(e.target) &&
+      !e.target.closest('.building-hotspot')) {
+    hideMiniPopup();
+  }
+});
+
+// Escape closes whichever popup/panel is open
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    hideMiniPopup();
+    closeCard();
+  }
+});
+
+function showCard(title, img, desc, page) {
+  document.getElementById('infoCard').classList.add('open');
   document.getElementById('cardTitle').innerText = title;
   document.getElementById('cardImg').src = img;
   document.getElementById('cardDesc').innerText = desc;
+  const link = document.getElementById('cardLink');
+  if (page) {
+    link.href = page;
+    link.style.display = 'inline-block';
+  } else {
+    link.style.display = 'none';
+  }
+}
+
+// ===========================================================
+// Building hotspot markers on the 3D model.
+// Reuses the same `buildings` array the search bar already uses,
+// so names/images/pages stay in sync with search automatically.
+//
+// buildingPositions below holds the 3D coordinates for each building.
+// These are PLACEHOLDERS - use enableHotspotPicker() (see below) to
+// find each building's real position by clicking on it in the 3D view,
+// then update the matching entry here.
+// ===========================================================
+const buildingPositions = {
+"BVM Building": { position: "-109.05 18.61 -306.19", normal: "-0.00 0.97 0.24" },
+"SJ Building": { position: "-30.61 15.17 -273.21", normal: "0 1 0" },
+"LS Building": { position: "-196.07 11.59 -118.17", normal: "0.00 0.94 -0.34" },
+"Art Center": { position: "-201.25 13.64 -179.63", normal: "-0.00 0.97 0.24" },
+"ROTC Building": { position: "13.84 8.73 -90.33", normal: "0 1 0" },
+"IS Basketball Court": { position: "-78.10 11.42 -367.26", normal: "0 1 0" },
+"SB Building": { position: "-112.10 14.42 -10.13", normal: "0 1 0" },
+"Star Chapel": { position: "-114.45 10.45 -86.44", normal: "0 1 0" },
+"SC Building": { position: "-115.97 14.66 -151.51", normal: "0 1 0" },
+"Lasallian Mission Unit (LMU)": { position: "-173.33 10.69 -60.32", normal: "0 1 0" },
+"Deportivo": { position: "-33.25 11.62 2.63", normal: "0 1 0" },
+"Recycling": { position: "13.84 8.73 -80.33", normal: "0 1 0" },
+"Oval": { position: "-9.08 4.57 -44.73", normal: "0 1 0" },
+"University Clinic": { position: "-141.31 7.08 -38.26", normal: "0 1 0" },
+"USG Office": { position: "-148.28 7.61 -70.80", normal: "0 1 0" }
+
+};
+
+function slugify(name) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+}
+
+function renderBuildingHotspots() {
+  const mv = document.querySelector('#map model-viewer');
+  if (!mv) return;
+
+  buildings.forEach((building) => {
+    const pos = buildingPositions[building.name];
+    if (!pos) return; // no coordinates yet for this building
+
+    const slot = 'hotspot-' + slugify(building.name);
+
+    const btn = document.createElement('button');
+    btn.className = 'building-hotspot';
+    btn.slot = slot;
+    btn.dataset.position = pos.position;
+    btn.dataset.normal = pos.normal;
+    btn.setAttribute('slot', slot);
+    btn.setAttribute('data-position', pos.position);
+    btn.setAttribute('data-normal', pos.normal);
+    btn.onclick = () => showMiniPopup(building, btn);
+
+    const pin = document.createElement('span');
+    pin.className = 'hotspot-pin';
+    const label = document.createElement('span');
+    label.className = 'hotspot-label';
+    label.textContent = building.name;
+
+    btn.appendChild(pin);
+    btn.appendChild(label);
+    mv.appendChild(btn);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', renderBuildingHotspots);
+if (document.readyState !== 'loading') renderBuildingHotspots();
+
+// --- DEV HELPER: find real hotspot coordinates by clicking the model ---
+// Open the browser console, run: enableHotspotPicker()
+// Then click a building in the 3D view. It logs the exact position/normal
+// to paste into the matching entry in buildingPositions above.
+function enableHotspotPicker() {
+  const mv = document.querySelector('#map model-viewer');
+  mv.addEventListener('click', (event) => {
+    const rect = mv.getBoundingClientRect();
+    const hit = mv.positionAndNormalFromPoint(
+      event.clientX - rect.left,
+      event.clientY - rect.top
+    );
+    if (hit) {
+      console.log(
+        `position: "${hit.position.x.toFixed(2)} ${hit.position.y.toFixed(2)} ${hit.position.z.toFixed(2)}", ` +
+        `normal: "${hit.normal.x.toFixed(2)} ${hit.normal.y.toFixed(2)} ${hit.normal.z.toFixed(2)}"`
+      );
+    } else {
+      console.log('No surface hit at that point - click directly on the model.');
+    }
+  });
+  console.log('Hotspot picker enabled. Click any building to log its coordinates.');
 }
 
 // Search functionality
@@ -582,6 +1208,7 @@ function showMapView(view) {
     btn3d.classList.add('active');
     btn2d.classList.remove('active');
   } else {
+    if (typeof closeAllBuildingPopups === 'function') closeAllBuildingPopups();
     view3d.classList.add('hidden-view');
     view2d.classList.add('active');
     btn3d.classList.remove('active');
@@ -591,17 +1218,11 @@ function showMapView(view) {
       initLeafletNav();
       leafletMapInitialized = true;
     } else {
-      setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 100);
+      setTimeout(() => leafletMap.invalidateSize(), 100);
     }
   }
 }
 
-// ===========================================================
-// 2D Navigation on the illustrated campus map.
-// The layout is loaded from campus-graph.json, which you export
-// from campus-map-editor.html. Until that file exists, a small
-// sample graph is used so the map still works.
-// ===========================================================
 let MAP_W = 1410, MAP_H = 840, MAP_IMAGE = "campus-map.jpg", METERS_PER_PIXEL = 0.35;
 const GRAPH_FILE = "campus-graph.json";
 
@@ -775,141 +1396,14 @@ function clear2DRoute() {
   if (el) el.textContent = "";
 }
 
-// ==========================================
-// GPS TRACKING & CALIBRATION SETUP
-// ==========================================
 
-let userLocationMarker = null;
-let userAccuracyCircle = null;
-let gpsWatchId = null;
-
-//=======================
-// CALIBRATION POINTS
-// Pick two opposite corners on your campus image and find their exact GPS coordinates.
-// Replace these values with your actual calibrated coordinates.
-//=======================
-const GPS_CALIBRATION = {
-  // Point 1: Top-Left reference area
-  p1: { lat: 8.148120, lng: 123.840100, x: 120, y: 150 },
-  // Point 2: Bottom-Right reference area
-  p2: { lat: 8.145500, lng: 123.843500, x: 1250, y: 720 }
-};
-
-// Converts GPS (Lat, Lng) to Image Pixel Coordinates (X, Y)
-function gpsToPixel(lat, lng) {
-  const { p1, p2 } = GPS_CALIBRATION;
-
-  // Linear interpolation for X and Y pixel scaling
-  const percentX = (lng - p1.lng) / (p2.lng - p1.lng);
-  const percentY = (lat - p1.lat) / (p2.lat - p1.lat);
-
-  const x = p1.x + percentX * (p2.x - p1.x);
-  const y = p1.y + percentY * (p2.y - p1.y);
-
-  return { x, y };
-}
-
-// Toggles real-time GPS tracking on and off
-function toggleGPSTracking() {
-  if (gpsWatchId !== null) {
-    // Stop tracking
-    navigator.geolocation.clearWatch(gpsWatchId);
-    gpsWatchId = null;
-
-    if (userLocationMarker) leafletMap.removeLayer(userLocationMarker);
-    if (userAccuracyCircle) leafletMap.removeLayer(userAccuracyCircle);
-    userLocationMarker = null;
-    userAccuracyCircle = null;
-
-    document.getElementById("gpsBtn").innerText = "Enable Live GPS";
-    document.getElementById("nav2dStats").innerText = "GPS Tracking Disabled.";
-    return;
-  }
-
-  if (!("geolocation" in navigator)) {
-    alert("Geolocation is not supported by your browser.");
-    return;
-  }
-
-  document.getElementById("gpsBtn").innerText = "Locating...";
-
-  gpsWatchId = navigator.geolocation.watchPosition(
-    onGpsSuccess,
-    onGpsError,
-    {
-      enableHighAccuracy: true,
-      maximumAge: 2000,
-      timeout: 10000
-    }
-  );
-}
-
-// Geolocation Success Callback
-function onGpsSuccess(position) {
-  const lat = position.coords.latitude;
-  const lng = position.coords.longitude;
-  const accuracy = position.coords.accuracy; // in meters
-
-  // Convert GPS to Pixel Coordinates
-  const pix = gpsToPixel(lat, lng);
-  const leafletCoords = toLL(pix.x, pix.y);
-
-  // Check if position is within map boundaries
-  if (pix.x < 0 || pix.x > MAP_WIDTH || pix.y < 0 || pix.y > MAP_HEIGHT) {
-    document.getElementById("nav2dStats").innerText = 
-      `GPS active, but you appear to be outside the mapped campus bounds.`;
-    return;
-  }
-
-  // Draw or update Accuracy Circle
-  const pixelAccuracyRadius = accuracy / METERS_PER_PIXEL;
-  if (!userAccuracyCircle) {
-    userAccuracyCircle = L.circle(leafletCoords, {
-      radius: pixelAccuracyRadius,
-      color: "#2196F3",
-      fillColor: "#2196F3",
-      fillOpacity: 0.15,
-      weight: 1
-    }).addTo(leafletMap);
-  } else {
-    userAccuracyCircle.setLatLng(leafletCoords);
-    userAccuracyCircle.setRadius(pixelAccuracyRadius);
-  }
-
-  // Draw or update Position Marker
-  if (!userLocationMarker) {
-    userLocationMarker = L.circleMarker(leafletCoords, {
-      radius: 8,
-      color: "#FFFFFF",
-      fillColor: "#007AFF",
-      fillOpacity: 1,
-      weight: 3
-    }).addTo(leafletMap).bindPopup("You are here");
-  } else {
-    userLocationMarker.setLatLng(leafletCoords);
-  }
-
-  document.getElementById("gpsBtn").innerText = "Disable Live GPS";
-  document.getElementById("nav2dStats").innerText = 
-    `Live GPS Active (Accuracy: ~${Math.round(accuracy)}m)`;
-}
-
-// Geolocation Error Callback
-function onGpsError(error) {
-  let message = "Unable to retrieve GPS location.";
-  switch (error.code) {
-    case error.PERMISSION_DENIED:
-      message = "Location permission denied by user.";
-      break;
-    case error.POSITION_UNAVAILABLE:
-      message = "Location information is unavailable.";
-      break;
-    case error.TIMEOUT:
-      message = "Location request timed out.";
-      break;
-  }
-  alert(message);
-  toggleGPSTracking(); // Reset state
+function swap2DRoute() {
+  const fromSelect = document.getElementById('nav2dFrom');
+  const toSelect = document.getElementById('nav2dTo');
+  const temp = fromSelect.value;
+  fromSelect.value = toSelect.value;
+  toSelect.value = temp;
+  if (navRouteLine) find2DRoute();
 }
 
 // Chatbot functionality - UPDATED FOR NETLIFY

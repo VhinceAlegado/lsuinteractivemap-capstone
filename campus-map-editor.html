@@ -37,7 +37,7 @@
 <div id="help"></div>
 <div id="wrap"><svg id="svg"><image id="bg" href="campus-map.webp"/><g id="edges"></g><g id="nodes"></g></svg></div>
 <script>
-const $= id => document.getElementById(id), svg =$('svg'), NS = 'http://www.w3.org/2000/svg';
+const $ = id => document.getElementById(id), svg = $('svg'), NS = 'http://www.w3.org/2000/svg';
 const helps = {
   wp: 'Click along a walkway to add waypoints. Each new one links to the last selected node, so one click per bend traces a path. Drag any node to adjust it.',
   bl: 'Click next to a door to place a building. It links to the selected waypoint. Double-click a building to rename it.',
@@ -50,7 +50,7 @@ let sel = null, linkFrom = null, nodes = {}, seq = 1, drag = null, moved = false
 function setSize() {
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
   svg.style.width = W * zoom + 'px'; svg.style.height = H * zoom + 'px';
-  $('bg').setAttribute('width', W);$('bg').setAttribute('height', H);
+  $('bg').setAttribute('width', W); $('bg').setAttribute('height', H);
 }
 function fit() { zoom = Math.min(1, (innerWidth - 20) / W); setSize(); }
 function pt(e) {
@@ -72,7 +72,7 @@ function add(x, y, type) {
   return id;
 }
 function draw() {
-  const E = $('edges'), N =$('nodes'); E.innerHTML = ''; N.innerHTML = '';
+  const E = $('edges'), N = $('nodes'); E.innerHTML = ''; N.innerHTML = '';
   for (const [id, n] of Object.entries(nodes)) for (const o of n.connects_to) if (id < o) {
     const m = nodes[o];
     E.insertAdjacentHTML('beforeend', `<line x1="${n.x}" y1="${n.y}" x2="${m.x}" y2="${m.y}" stroke="#0077cc" stroke-width="3" opacity=".85"/>`);
@@ -90,12 +90,12 @@ function draw() {
   }
 }
 function persist() {
-  try { localStorage.setItem('campusEditor', JSON.stringify({ imgName, W, H, nodes, seq, mpp: $('mpp').value, data:$('bg').getAttribute('href') })); } catch (e) {}
+  try { localStorage.setItem('campusEditor', JSON.stringify({ imgName, W, H, nodes, seq, mpp: $('mpp').value, data: $('bg').getAttribute('href') })); } catch (e) {}
 }
 function restore() {
   try {
     const s = JSON.parse(localStorage.getItem('campusEditor') || 'null'); if (!s) return;
-    ({ imgName, W, H, nodes, seq } = s); $('mpp').value = s.mpp; if (s.data)$('bg').setAttribute('href', s.data);
+    ({ imgName, W, H, nodes, seq } = s); $('mpp').value = s.mpp; if (s.data) $('bg').setAttribute('href', s.data);
   } catch (e) {}
 }
 const idOf = e => e.target.dataset && e.target.dataset.id;
@@ -134,7 +134,8 @@ document.querySelectorAll('[data-m]').forEach(b => b.onclick = () => {
   $('help').textContent = helps[mode]; draw();
 });
 $('zi').onclick = () => { zoom *= 1.25; setSize(); };
-$('zo').onclick = () => { zoom /= 1.25; setSize(); };$('mpp').onchange = persist;
+$('zo').onclick = () => { zoom /= 1.25; setSize(); };
+$('mpp').onchange = persist;
 $('img').onchange = e => {
   const f = e.target.files[0]; if (!f) return;
   const r = new FileReader();
@@ -162,31 +163,4 @@ $('imp').onchange = e => {
 $('clr').onclick = () => { if (confirm('Delete every node?')) { nodes = {}; sel = null; seq = 1; draw(); persist(); } };
 
 restore(); fit(); draw(); $('help').textContent = helps.wp;
-</script>
-
-<script>
-  // Working SVG Coordinate Tracker
-  document.addEventListener('DOMContentLoaded', () => {
-    const svgEl = document.getElementById('svg');
-    if (!svgEl) return;
-
-    // Create floating badge on bottom-left corner
-    const badge = document.createElement('div');
-    badge.style.cssText = 'position:fixed; bottom:15px; left:15px; background:rgba(0,0,0,0.85); color:#00ffcc; padding:8px 14px; border-radius:6px; font-family:monospace; font-size:14px; font-weight:bold; z-index:9999; pointer-events:none; box-shadow:0 2px 8px rgba(0,0,0,0.3);';
-    badge.innerText = 'X: 0, Y: 0';
-    document.body.appendChild(badge);
-
-    svgEl.addEventListener('mousemove', (e) => {
-      const p = svgEl.createSVGPoint();
-      p.x = e.clientX;
-      p.y = e.clientY;
-      const q = p.matrixTransform(svgEl.getScreenCTM().inverse());
-      
-      const x = Math.round(q.x);
-      const y = Math.round(q.y);
-
-      badge.innerText = `X: ${x}, Y: ${y}`;
-    });
-  });
-</script>
-</body></html>
+</script></body></html>

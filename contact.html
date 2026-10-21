@@ -263,6 +263,32 @@
     </div>
   </footer>
 
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyChcrh4HSqCLkzlLm0NKLA_HTidpztq2gU",
+    authDomain: "lsu-campus-feedback.firebaseapp.com",
+    projectId: "lsu-campus-feedback",
+    storageBucket: "lsu-campus-feedback.firebasestorage.app",
+    messagingSenderId: "353851943760",
+    appId: "1:353851943760:web:717c9ca714fadb04911a55"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // Exposed globally so the classic <script> below (which handles the
+  // form UI/popup) can call this without needing to be a module itself.
+  window.submitFeedbackToFirestore = async function (data) {
+    await addDoc(collection(db, "feedback"), {
+      ...data,
+      createdAt: serverTimestamp()
+    });
+  };
+</script>
+
 <script>
   // Mobile menu toggle
   const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
@@ -278,9 +304,6 @@
   const formStatus = document.getElementById('formStatus');
   const popupOverlay = document.getElementById('popupOverlay');
   const popupContent = document.getElementById('popupContent');
-
-  // google app script link
-  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby1pzlXcNWlYsUQNVASH7-bUxyY8m5PvjgOugvgvG6isyqMeLhY_yKH_Hl7l4xEb_ZF/exec';
 
   // Function to show beautiful popup
   function showPopup(type, title, message) {
@@ -328,24 +351,12 @@ contactForm.addEventListener('submit', async (e) => {
   formStatus.style.display = 'none';
 
   try {
-    // Send to Google Sheets - IMPORTANT: Use this special format for Google Apps Script
-    const response = await fetch(GOOGLE_SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors', // Add this line
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data)
-    });
+    await window.submitFeedbackToFirestore(data);
 
-    // For no-cors mode, we can't read the response, so we'll assume success
-    // Show success message after a short delay to simulate processing
-    setTimeout(() => {
-      showPopup('success', 'Message Sent!', 'Thank you for your message! We will get back to you soon.');
-      contactForm.reset();
-      submitBtn.classList.remove('loading');
-    }, 1000);
-    
+    showPopup('success', 'Message Sent!', 'Thank you for your message! We will get back to you soon.');
+    contactForm.reset();
+    submitBtn.classList.remove('loading');
+
   } catch (error) {
     console.error('Error:', error);
     showPopup('error', 'Sending Failed', 'Sorry, there was an error sending your message. Please try again or contact us directly.');
