@@ -20,8 +20,8 @@
       "type": "building",
       "name": "Arts Center",
       "connects_to": [
-        "wp_32",
-        "wp_37"
+        "wp_37",
+        "wp_35"
       ]
     },
     "b_8": {
@@ -34,8 +34,8 @@
       ]
     },
     "b_9": {
-      "x": 478,
-      "y": 538,
+      "x": 456,
+      "y": 501,
       "type": "building",
       "name": "Oval",
       "connects_to": [
@@ -43,13 +43,13 @@
       ]
     },
     "b_10": {
-      "x": 344,
-      "y": 517,
+      "x": 352,
+      "y": 507,
       "type": "building",
       "name": "Deportivo",
       "connects_to": [
-        "wp_46",
-        "wp_108"
+        "wp_45",
+        "wp_46"
       ]
     },
     "b_11": {
@@ -60,35 +60,23 @@
       "connects_to": []
     },
     "wp_12": {
-      "x": 1276,
-      "y": 256,
+      "x": 1258,
+      "y": 246,
       "type": "waypoint",
       "name": null,
       "connects_to": [
-        "wp_13"
-      ]
-    },
-    "wp_13": {
-      "x": 907,
-      "y": 253,
-      "type": "waypoint",
-      "name": null,
-      "connects_to": [
-        "wp_12",
-        "wp_14",
-        "wp_19",
-        "wp_56",
-        "wp_69"
+        "wp_78"
       ]
     },
     "wp_14": {
-      "x": 827,
-      "y": 252,
+      "x": 826,
+      "y": 251,
       "type": "waypoint",
       "name": null,
       "connects_to": [
-        "wp_13",
-        "wp_15"
+        "wp_15",
+        "wp_128",
+        "b_121"
       ]
     },
     "wp_15": {
@@ -132,15 +120,6 @@
         "wp_20"
       ]
     },
-    "wp_19": {
-      "x": 803,
-      "y": 221,
-      "type": "waypoint",
-      "name": null,
-      "connects_to": [
-        "wp_13"
-      ]
-    },
     "wp_20": {
       "x": 618,
       "y": 272,
@@ -158,20 +137,21 @@
       "name": null,
       "connects_to": [
         "wp_20",
-        "wp_22",
-        "wp_112"
+        "wp_112",
+        "wp_47"
       ]
     },
     "wp_22": {
-      "x": 598,
-      "y": 245,
+      "x": 595,
+      "y": 242,
       "type": "waypoint",
       "name": null,
       "connects_to": [
-        "wp_21",
         "wp_23",
-        "wp_39",
-        "wp_47"
+        "wp_47",
+        "wp_27",
+        "wp_142",
+        "wp_29"
       ]
     },
     "wp_23": {
@@ -185,13 +165,15 @@
       ]
     },
     "wp_24": {
-      "x": 616,
-      "y": 205,
+      "x": 614,
+      "y": 196,
       "type": "waypoint",
       "name": null,
       "connects_to": [
         "wp_23",
-        "wp_25"
+        "wp_25",
+        "wp_27",
+        "wp_34"
       ]
     },
     "wp_25": {
@@ -215,67 +197,51 @@
       ]
     },
     "wp_27": {
-      "x": 592,
-      "y": 234,
+      "x": 579,
+      "y": 204,
       "type": "waypoint",
       "name": null,
       "connects_to": [
-        "wp_26"
+        "wp_26",
+        "wp_22",
+        "wp_24"
       ]
     },
     "wp_28": {
-      "x": 728,
-      "y": 203,
+      "x": 731,
+      "y": 207,
       "type": "waypoint",
       "name": null,
       "connects_to": [
         "wp_17",
-        "wp_29"
+        "wp_29",
+        "wp_151"
       ]
     },
     "wp_29": {
-      "x": 701,
-      "y": 210,
+      "x": 706,
+      "y": 216,
       "type": "waypoint",
       "name": null,
       "connects_to": [
         "wp_28",
-        "wp_30"
+        "wp_30",
+        "wp_22"
       ]
     },
     "wp_30": {
-      "x": 698,
-      "y": 194,
+      "x": 699,
+      "y": 200,
       "type": "waypoint",
       "name": null,
       "connects_to": [
         "wp_29",
-        "wp_31",
-        "wp_33"
-      ]
-    },
-    "wp_31": {
-      "x": 712,
-      "y": 190,
-      "type": "waypoint",
-      "name": null,
-      "connects_to": [
-        "wp_30",
-        "wp_32"
-      ]
-    },
-    "wp_32": {
-      "x": 705,
-      "y": 167,
-      "type": "waypoint",
-      "name": null,
-      "connects_to": [
-        "wp_31",
-        "b_4"
+        "wp_33",
+        "wp_35"
       ]
     },
     "wp_33": {
-      "x": 672,
+      "x": 673,
       "y": 201,
       "type": "waypoint",
       "name": null,
@@ -285,14 +251,15 @@
       ]
     },
     "wp_34": {
-      "x": 667,
-      "y": 184,
+      "x": 663,
+      "y": 183,
       "type": "waypoint",
       "name": null,
       "connects_to": [
         "wp_33",
         "wp_35",
-        "wp_36"
+        "wp_36",
+        "wp_24"
       ]
     },
     "wp_35": {
@@ -301,12 +268,14 @@
       "type": "waypoint",
       "name": null,
       "connects_to": [
-        "wp_34"
+        "wp_34",
+        "b_4",
+        "wp_30"
       ]
     },
     "wp_36": {
-      "x": 676,
-      "y": 182,
+      "x": 677,
+      "y": 181,
       "type": "waypoint",
       "name": null,
       "connects_to": [
@@ -334,46 +303,37 @@
         "wp_37"
       ]
     },
-    "wp_39": {
-      "x": 461,
-      "y": 283,
-      "type": "waypoint",
-      "name": null,
-      "connects_to": [
-        "wp_22",
-        "wp_40"
-      ]
-    },
     "wp_40": {
-      "x": 436,
-      "y": 296,
-      "type": "waypoint",
-      "name": null,
-      "connects_to": [
-        "wp_39",
-        "wp_41"
-      ]
-    },
-    "wp_41": {
-      "x": 367,
-      "y": 342,
-      "type": "waypoint",
-      "name": null,
-      "connects_to": [
-        "wp_40",
-        "wp_42",
-        "b_109"
-      ]
-    },
-    "wp_42": {
-      "x": 424,
-      "y": 401,
+      "x": 433,
+      "y": 299,
       "type": "waypoint",
       "name": null,
       "connects_to": [
         "wp_41",
+        "wp_142"
+      ]
+    },
+    "wp_41": {
+      "x": 370,
+      "y": 346,
+      "type": "waypoint",
+      "name": null,
+      "connects_to": [
+        "wp_40",
+        "b_109",
+        "wp_144"
+      ]
+    },
+    "wp_42": {
+      "x": 427,
+      "y": 405,
+      "type": "waypoint",
+      "name": null,
+      "connects_to": [
         "wp_43",
-        "wp_45"
+        "wp_45",
+        "wp_144",
+        "wp_114"
       ]
     },
     "wp_43": {
@@ -389,34 +349,33 @@
     },
     "wp_45": {
       "x": 334,
-      "y": 477,
+      "y": 478,
       "type": "waypoint",
       "name": null,
       "connects_to": [
         "wp_42",
-        "wp_46",
-        "wp_108"
+        "b_10"
       ]
     },
     "wp_46": {
-      "x": 387,
+      "x": 381,
       "y": 526,
       "type": "waypoint",
       "name": null,
       "connects_to": [
-        "wp_45",
         "wp_89",
         "b_10"
       ]
     },
     "wp_47": {
-      "x": 602,
-      "y": 254,
+      "x": 601,
+      "y": 255,
       "type": "waypoint",
       "name": null,
       "connects_to": [
         "wp_22",
-        "wp_48"
+        "wp_48",
+        "wp_21"
       ]
     },
     "wp_48": {
@@ -430,8 +389,8 @@
       ]
     },
     "wp_49": {
-      "x": 485,
-      "y": 302,
+      "x": 486,
+      "y": 299,
       "type": "waypoint",
       "name": null,
       "connects_to": [
@@ -451,8 +410,8 @@
       ]
     },
     "wp_51": {
-      "x": 479,
-      "y": 326,
+      "x": 482,
+      "y": 332,
       "type": "waypoint",
       "name": null,
       "connects_to": [
@@ -471,12 +430,13 @@
       ]
     },
     "wp_53": {
-      "x": 451,
+      "x": 452,
       "y": 371,
       "type": "waypoint",
       "name": null,
       "connects_to": [
-        "wp_52"
+        "wp_52",
+        "wp_144"
       ]
     },
     "wp_55": {
@@ -491,38 +451,40 @@
     },
     "wp_56": {
       "x": 932,
-      "y": 260,
+      "y": 261,
       "type": "waypoint",
       "name": null,
       "connects_to": [
-        "wp_13",
-        "wp_57"
+        "wp_57",
+        "wp_129",
+        "wp_145"
       ]
     },
     "wp_57": {
-      "x": 936,
+      "x": 947,
       "y": 311,
       "type": "waypoint",
       "name": null,
       "connects_to": [
         "wp_56",
-        "wp_58",
-        "wp_60"
+        "wp_60",
+        "wp_141"
       ]
     },
     "wp_58": {
-      "x": 1034,
-      "y": 311,
+      "x": 1042,
+      "y": 310,
       "type": "waypoint",
       "name": null,
       "connects_to": [
-        "wp_57",
         "wp_59",
-        "wp_62"
+        "wp_62",
+        "wp_141",
+        "wp_139"
       ]
     },
     "wp_59": {
-      "x": 1037,
+      "x": 1040,
       "y": 326,
       "type": "waypoint",
       "name": null,
@@ -532,8 +494,8 @@
       ]
     },
     "wp_60": {
-      "x": 948,
-      "y": 337,
+      "x": 947,
+      "y": 330,
       "type": "waypoint",
       "name": null,
       "connects_to": [
@@ -542,8 +504,8 @@
       ]
     },
     "wp_61": {
-      "x": 953,
-      "y": 346,
+      "x": 948,
+      "y": 351,
       "type": "waypoint",
       "name": null,
       "connects_to": [
@@ -553,7 +515,7 @@
     },
     "wp_62": {
       "x": 1129,
-      "y": 312,
+      "y": 311,
       "type": "waypoint",
       "name": null,
       "connects_to": [
@@ -579,22 +541,22 @@
       "name": null,
       "connects_to": [
         "wp_62",
-        "wp_65"
+        "wp_79"
       ]
     },
     "wp_65": {
-      "x": 1220,
-      "y": 309,
+      "x": 1221,
+      "y": 306,
       "type": "waypoint",
       "name": null,
       "connects_to": [
-        "wp_64",
+        "wp_79",
         "wp_115"
       ]
     },
     "b_67": {
-      "x": 1428,
-      "y": 207,
+      "x": 1426,
+      "y": 268,
       "type": "building",
       "name": "LSU Dorm",
       "connects_to": [
@@ -611,13 +573,15 @@
       ]
     },
     "wp_69": {
-      "x": 885,
-      "y": 228,
+      "x": 886,
+      "y": 223,
       "type": "waypoint",
       "name": null,
       "connects_to": [
-        "wp_13",
-        "wp_70"
+        "wp_70",
+        "wp_129",
+        "wp_130",
+        "wp_154"
       ]
     },
     "wp_70": {
@@ -642,20 +606,21 @@
       ]
     },
     "wp_72": {
-      "x": 1054,
-      "y": 221,
+      "x": 1053,
+      "y": 222,
       "type": "waypoint",
       "name": null,
       "connects_to": [
         "wp_71",
         "wp_73",
         "wp_75",
-        "wp_76"
+        "wp_136",
+        "wp_135"
       ]
     },
     "wp_73": {
       "x": 1066,
-      "y": 211,
+      "y": 206,
       "type": "waypoint",
       "name": null,
       "connects_to": [
@@ -674,21 +639,29 @@
       ]
     },
     "wp_75": {
-      "x": 1022,
-      "y": 253,
+      "x": 1028,
+      "y": 248,
       "type": "waypoint",
       "name": null,
       "connects_to": [
-        "wp_72"
+        "wp_72",
+        "wp_133",
+        "wp_134",
+        "wp_135",
+        "wp_139",
+        "wp_146",
+        "wp_147"
       ]
     },
     "wp_76": {
-      "x": 1082,
-      "y": 253,
+      "x": 1098,
+      "y": 247,
       "type": "waypoint",
       "name": null,
       "connects_to": [
-        "wp_72"
+        "wp_78",
+        "wp_137",
+        "wp_148"
       ]
     },
     "wp_77": {
@@ -704,26 +677,30 @@
     },
     "wp_78": {
       "x": 1177,
-      "y": 253,
+      "y": 248,
       "type": "waypoint",
       "name": null,
       "connects_to": [
         "wp_77",
-        "wp_79"
+        "wp_76",
+        "wp_12",
+        "wp_149"
       ]
     },
     "wp_79": {
       "x": 1186,
-      "y": 309,
+      "y": 307,
       "type": "waypoint",
       "name": null,
       "connects_to": [
-        "wp_78"
+        "wp_149",
+        "wp_64",
+        "wp_65"
       ]
     },
     "b_82": {
       "x": 1040,
-      "y": 346,
+      "y": 350,
       "type": "building",
       "name": "SJ Building",
       "connects_to": [
@@ -733,8 +710,8 @@
       ]
     },
     "wp_83": {
-      "x": 989,
-      "y": 347,
+      "x": 993,
+      "y": 348,
       "type": "waypoint",
       "name": null,
       "connects_to": [
@@ -744,8 +721,8 @@
       ]
     },
     "wp_84": {
-      "x": 1090,
-      "y": 344,
+      "x": 1092,
+      "y": 352,
       "type": "waypoint",
       "name": null,
       "connects_to": [
@@ -755,31 +732,23 @@
       ]
     },
     "wp_85": {
-      "x": 1114,
-      "y": 430,
+      "x": 1095,
+      "y": 437,
       "type": "waypoint",
       "name": null,
       "connects_to": [
-        "wp_84"
+        "wp_84",
+        "wp_86"
       ]
     },
     "wp_86": {
-      "x": 993,
-      "y": 433,
+      "x": 996,
+      "y": 435,
       "type": "waypoint",
       "name": null,
       "connects_to": [
         "wp_83",
-        "wp_87"
-      ]
-    },
-    "wp_87": {
-      "x": 1016,
-      "y": 436,
-      "type": "waypoint",
-      "name": null,
-      "connects_to": [
-        "wp_86"
+        "wp_85"
       ]
     },
     "wp_89": {
@@ -872,7 +841,8 @@
       "connects_to": [
         "wp_96",
         "wp_113",
-        "b_9"
+        "b_9",
+        "wp_114"
       ]
     },
     "b_99": {
@@ -896,8 +866,8 @@
       ]
     },
     "wp_101": {
-      "x": 508,
-      "y": 391,
+      "x": 509,
+      "y": 385,
       "type": "waypoint",
       "name": null,
       "connects_to": [
@@ -906,8 +876,8 @@
       ]
     },
     "wp_102": {
-      "x": 492,
-      "y": 397,
+      "x": 488,
+      "y": 393,
       "type": "waypoint",
       "name": null,
       "connects_to": [
@@ -931,50 +901,17 @@
       "name": null,
       "connects_to": [
         "wp_103",
-        "wp_105",
         "wp_111",
         "wp_112"
       ]
     },
-    "wp_105": {
-      "x": 635,
-      "y": 300,
-      "type": "waypoint",
-      "name": null,
-      "connects_to": [
-        "wp_104",
-        "wp_106",
-        "b_107"
-      ]
-    },
-    "wp_106": {
-      "x": 749,
-      "y": 272,
-      "type": "waypoint",
-      "name": null,
-      "connects_to": [
-        "wp_105",
-        "b_107"
-      ]
-    },
     "b_107": {
-      "x": 662,
-      "y": 298,
+      "x": 649,
+      "y": 302,
       "type": "building",
       "name": "LSU Fitness Gym",
       "connects_to": [
-        "wp_106",
-        "wp_105"
-      ]
-    },
-    "wp_108": {
-      "x": 337,
-      "y": 497,
-      "type": "waypoint",
-      "name": null,
-      "connects_to": [
-        "b_10",
-        "wp_45"
+        "wp_112"
       ]
     },
     "b_109": {
@@ -997,13 +934,14 @@
       ]
     },
     "wp_112": {
-      "x": 619,
-      "y": 304,
+      "x": 621,
+      "y": 301,
       "type": "waypoint",
       "name": null,
       "connects_to": [
         "wp_104",
-        "wp_21"
+        "wp_21",
+        "b_107"
       ]
     },
     "wp_113": {
@@ -1019,37 +957,39 @@
     },
     "wp_114": {
       "x": 410,
-      "y": 444,
+      "y": 447,
       "type": "waypoint",
       "name": null,
       "connects_to": [
         "wp_43",
-        "wp_113"
+        "wp_113",
+        "wp_97",
+        "wp_42"
       ]
     },
     "wp_115": {
-      "x": 1264,
-      "y": 291,
+      "x": 1247,
+      "y": 296,
       "type": "waypoint",
       "name": null,
       "connects_to": [
-        "wp_65",
-        "wp_116"
+        "b_120",
+        "wp_65"
       ]
     },
     "wp_116": {
-      "x": 1299,
-      "y": 294,
+      "x": 1289,
+      "y": 287,
       "type": "waypoint",
       "name": null,
       "connects_to": [
-        "wp_115",
-        "wp_117"
+        "wp_117",
+        "b_120"
       ]
     },
     "wp_117": {
-      "x": 1338,
-      "y": 294,
+      "x": 1310,
+      "y": 299,
       "type": "waypoint",
       "name": null,
       "connects_to": [
@@ -1068,33 +1008,317 @@
       ]
     },
     "wp_119": {
-      "x": 1421,
-      "y": 276,
+      "x": 1408,
+      "y": 283,
       "type": "waypoint",
       "name": null,
       "connects_to": [
         "wp_118",
-        "b_67",
-        "b_120",
-        "b_121"
+        "b_67"
       ]
     },
     "b_120": {
       "x": 1263,
-      "y": 299,
+      "y": 293,
       "type": "building",
       "name": "PAB",
       "connects_to": [
-        "wp_119"
+        "wp_115",
+        "wp_116"
       ]
     },
     "b_121": {
-      "x": 851,
-      "y": 294,
+      "x": 850,
+      "y": 281,
       "type": "building",
       "name": "Brothers' House",
       "connects_to": [
-        "wp_119"
+        "wp_14"
+      ]
+    },
+    "wp_128": {
+      "x": 841,
+      "y": 242,
+      "type": "waypoint",
+      "name": null,
+      "connects_to": [
+        "wp_14",
+        "wp_129"
+      ]
+    },
+    "wp_129": {
+      "x": 868,
+      "y": 249,
+      "type": "waypoint",
+      "name": null,
+      "connects_to": [
+        "wp_128",
+        "wp_69",
+        "wp_56"
+      ]
+    },
+    "wp_130": {
+      "x": 906,
+      "y": 245,
+      "type": "waypoint",
+      "name": null,
+      "connects_to": [
+        "wp_131",
+        "wp_69"
+      ]
+    },
+    "wp_131": {
+      "x": 948,
+      "y": 248,
+      "type": "waypoint",
+      "name": null,
+      "connects_to": [
+        "wp_130",
+        "wp_132"
+      ]
+    },
+    "wp_132": {
+      "x": 979,
+      "y": 249,
+      "type": "waypoint",
+      "name": null,
+      "connects_to": [
+        "wp_131",
+        "wp_133"
+      ]
+    },
+    "wp_133": {
+      "x": 1009,
+      "y": 248,
+      "type": "waypoint",
+      "name": null,
+      "connects_to": [
+        "wp_132",
+        "wp_134",
+        "wp_75"
+      ]
+    },
+    "wp_134": {
+      "x": 1019,
+      "y": 238,
+      "type": "waypoint",
+      "name": null,
+      "connects_to": [
+        "wp_133",
+        "wp_135",
+        "wp_75"
+      ]
+    },
+    "wp_135": {
+      "x": 1030,
+      "y": 225,
+      "type": "waypoint",
+      "name": null,
+      "connects_to": [
+        "wp_134",
+        "wp_72",
+        "wp_75"
+      ]
+    },
+    "wp_136": {
+      "x": 1071,
+      "y": 224,
+      "type": "waypoint",
+      "name": null,
+      "connects_to": [
+        "wp_72",
+        "wp_137"
+      ]
+    },
+    "wp_137": {
+      "x": 1082,
+      "y": 234,
+      "type": "waypoint",
+      "name": null,
+      "connects_to": [
+        "wp_136",
+        "wp_76",
+        "wp_138",
+        "wp_147"
+      ]
+    },
+    "wp_138": {
+      "x": 1091,
+      "y": 279,
+      "type": "waypoint",
+      "name": null,
+      "connects_to": [
+        "wp_137",
+        "wp_139"
+      ]
+    },
+    "wp_139": {
+      "x": 1043,
+      "y": 281,
+      "type": "waypoint",
+      "name": null,
+      "connects_to": [
+        "wp_138",
+        "wp_140",
+        "wp_58",
+        "wp_75"
+      ]
+    },
+    "wp_140": {
+      "x": 980,
+      "y": 278,
+      "type": "waypoint",
+      "name": null,
+      "connects_to": [
+        "wp_139",
+        "wp_141"
+      ]
+    },
+    "wp_141": {
+      "x": 987,
+      "y": 310,
+      "type": "waypoint",
+      "name": null,
+      "connects_to": [
+        "wp_140",
+        "wp_57",
+        "wp_58"
+      ]
+    },
+    "wp_142": {
+      "x": 454,
+      "y": 284,
+      "type": "waypoint",
+      "name": null,
+      "connects_to": [
+        "wp_40",
+        "wp_22",
+        "wp_143"
+      ]
+    },
+    "wp_143": {
+      "x": 414,
+      "y": 251,
+      "type": "waypoint",
+      "name": null,
+      "connects_to": [
+        "wp_142"
+      ]
+    },
+    "wp_144": {
+      "x": 428,
+      "y": 388,
+      "type": "waypoint",
+      "name": null,
+      "connects_to": [
+        "wp_53",
+        "wp_42",
+        "wp_41"
+      ]
+    },
+    "wp_145": {
+      "x": 985,
+      "y": 262,
+      "type": "waypoint",
+      "name": null,
+      "connects_to": [
+        "wp_56",
+        "wp_146"
+      ]
+    },
+    "wp_146": {
+      "x": 1017,
+      "y": 261,
+      "type": "waypoint",
+      "name": null,
+      "connects_to": [
+        "wp_145",
+        "wp_147",
+        "wp_75"
+      ]
+    },
+    "wp_147": {
+      "x": 1064,
+      "y": 259,
+      "type": "waypoint",
+      "name": null,
+      "connects_to": [
+        "wp_146",
+        "wp_148",
+        "wp_75",
+        "wp_137"
+      ]
+    },
+    "wp_148": {
+      "x": 1104,
+      "y": 260,
+      "type": "waypoint",
+      "name": null,
+      "connects_to": [
+        "wp_147",
+        "wp_149",
+        "wp_76"
+      ]
+    },
+    "wp_149": {
+      "x": 1181,
+      "y": 264,
+      "type": "waypoint",
+      "name": null,
+      "connects_to": [
+        "wp_148",
+        "wp_78",
+        "wp_79"
+      ]
+    },
+    "b_150": {
+      "x": 767,
+      "y": 209,
+      "type": "building",
+      "name": "ikao Cafe",
+      "connects_to": [
+        "wp_151",
+        "wp_152"
+      ]
+    },
+    "wp_151": {
+      "x": 748,
+      "y": 201,
+      "type": "waypoint",
+      "name": null,
+      "connects_to": [
+        "wp_28",
+        "b_150"
+      ]
+    },
+    "wp_152": {
+      "x": 795,
+      "y": 200,
+      "type": "waypoint",
+      "name": null,
+      "connects_to": [
+        "wp_153",
+        "b_150"
+      ]
+    },
+    "wp_153": {
+      "x": 806,
+      "y": 221,
+      "type": "waypoint",
+      "name": null,
+      "connects_to": [
+        "wp_152",
+        "wp_154"
+      ]
+    },
+    "wp_154": {
+      "x": 842,
+      "y": 221,
+      "type": "waypoint",
+      "name": null,
+      "connects_to": [
+        "wp_153",
+        "wp_69"
       ]
     }
   }
