@@ -3,189 +3,1014 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Campus map editor</title>
 <style>
-  :root{--ink:#1c2b26;--line:#b9c4bf;--accent:#1b4332;--bg:#f4f6f5}
+  :root{--ink:#1c2b26;--line:#b9c4bf;--accent:#1b4332;--bg:#f4f6f5;--danger:#d62828;--strict:#8e44ad;--bridge:#d35400;--entrance:#27ae60;--stairs:#00bc8c;--official:#f39c12}
   *{box-sizing:border-box}
   body{margin:0;height:100vh;display:flex;flex-direction:column;font:14px system-ui,sans-serif;color:var(--ink);background:var(--bg)}
-  #bar{display:flex;flex-wrap:wrap;gap:6px;padding:8px;background:#fff;border-bottom:1px solid var(--line);align-items:center}
+  
+  /* Top Toolbar Styling */
+  #bar{display:flex;flex-wrap:wrap;gap:6px;padding:8px;background:#fff;border-bottom:1px solid var(--line);align-items:center;z-index:10}
   button,.btn{padding:6px 11px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);font:inherit;cursor:pointer}
   button:hover,.btn:hover{border-color:var(--accent)}
   button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  button:disabled{opacity:0.4;cursor:not-allowed;border-color:var(--line) !important;}
   button:focus-visible,.btn:focus-within{outline:2px solid #0077cc;outline-offset:2px}
   .sep{width:1px;height:24px;background:var(--line);margin:0 4px}
   input[type=number]{width:72px;padding:5px;border:1px solid var(--line);border-radius:6px;font:inherit}
-  #help{padding:6px 10px;font-size:13px;color:#4a5a54;background:#fff;border-bottom:1px solid var(--line)}
-  #wrap{flex:1;overflow:auto;background:#cfd6d3}
-  svg{display:block;cursor:crosshair}
+  
+  /* Info / Help Status Bar */
+  #help{padding:8px 12px;font-size:13px;color:#4a5a54;background:#fff;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;line-height:1.4;z-index:10}
+  #graphStatus{font-weight:600;font-size:12px;padding:4px 10px;border-radius:6px;white-space:nowrap}
+  #graphStatus.ok{background:#d4edda;color:#155724}
+  #graphStatus.warn{background:#f8d7da;color:#721c24}
+  
+  /* Main Canvas Container */
+  #wrap{flex:1;width:100%;height:100%;overflow:hidden;background:#202825;position:relative}
+  svg{display:block;width:100%;height:100%;cursor:crosshair}
+  line { vector-effect: non-scaling-stroke; }
   text{font:600 12px system-ui,sans-serif;paint-order:stroke;stroke:#fff;stroke-width:3px;pointer-events:none}
+  .edge-hover { stroke: #ff8800 !important; stroke-width: 8px !important; cursor: pointer; }
+  
+  /* Warning Pulse Animation for Disconnected Nodes */
+  .warn-pulse {
+    animation: warnPulse 1.2s infinite ease-in-out;
+    transform-origin: center;
+  }
+  @keyframes warnPulse {
+    0% { r: 12px; opacity: 0.9; }
+    50% { r: 18px; opacity: 0.3; }
+    100% { r: 12px; opacity: 0.9; }
+  }
+
+  /* Custom Right-Click Context Menu */
+  #contextMenu {
+    position: fixed;
+    display: none;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+    padding: 6px 0;
+    z-index: 10000;
+    min-width: 210px;
+  }
+  #contextMenu div {
+    padding: 7px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  #contextMenu div:hover {
+    background: #f0f4f2;
+    color: var(--accent);
+  }
+  #contextMenu .ctx-sep {
+    height: 1px;
+    background: var(--line);
+    margin: 4px 0;
+    padding: 0 !important;
+  }
 </style></head><body>
+
+<!-- Top Action Toolbar -->
 <div id="bar">
   <label class="btn">Load map image<input type="file" id="img" accept="image/*" hidden></label>
   <span class="sep"></span>
   <button data-m="wp" class="on">Waypoint</button>
   <button data-m="bl">Building</button>
+  <button data-m="sp" style="color:var(--strict);border-color:var(--strict)">Strict Point</button>
   <button data-m="ln">Connect</button>
+  <button data-m="off" style="color:var(--official);border-color:var(--official)">Official Route</button>
+  <button data-m="mv">Move All</button>
+  <button data-m="sc">Scale All</button>
   <button data-m="del">Delete</button>
+  <span class="sep"></span>
+  <button id="undo" title="Undo (Ctrl+Z)" disabled>↩ Undo</button>
+  <button id="redo" title="Redo (Ctrl+Y)" disabled>↪ Redo</button>
   <span class="sep"></span>
   <button id="zo" aria-label="Zoom out">Zoom out</button>
   <button id="zi" aria-label="Zoom in">Zoom in</button>
+  <button id="resetView" title="Reset View Bounds">Reset View</button>
   <label>Meters per pixel <input id="mpp" type="number" step="0.01" min="0.01" value="0.35"></label>
   <span class="sep"></span>
   <button id="exp">Export JSON</button>
   <label class="btn">Import JSON<input type="file" id="imp" accept=".json" hidden></label>
   <button id="clr">Clear all</button>
 </div>
-<div id="help"></div>
-<div id="wrap"><svg id="svg"><image id="bg" href="campus-map.webp"/><g id="edges"></g><g id="nodes"></g></svg></div>
-<script>
-const $= id => document.getElementById(id), svg =$('svg'), NS = 'http://www.w3.org/2000/svg';
-const helps = {
-  wp: 'Click along a walkway to add waypoints. Each new one links to the last selected node, so one click per bend traces a path. Drag any node to adjust it.',
-  bl: 'Click next to a door to place a building. It links to the selected waypoint. Double-click a building to rename it.',
-  ln: 'Click two nodes to connect them. Click the same pair again to disconnect.',
-  del: 'Click a node to delete it and its links.'
-};
-let W = 1410, H = 840, imgName = 'campus-map.webp', zoom = 1, mode = 'wp';
-let sel = null, linkFrom = null, nodes = {}, seq = 1, drag = null, moved = false;
 
+<!-- Status and Help Banner -->
+<div id="help">
+  <span id="helpText"></span>
+  <span id="graphStatus" class="ok">Graph OK</span>
+</div>
+
+<!-- Interactive SVG Canvas Workspace -->
+<div id="wrap">
+  <svg id="svg">
+    <g id="canvasGroup">
+      <image id="bg" href="campus-map.webp"/>
+      <g id="edges"></g>
+      <line id="rubberBand" stroke="#ff8800" stroke-width="4" stroke-dasharray="4" opacity="0"/>
+      <g id="nodes"></g>
+    </g>
+  </svg>
+</div>
+
+<!-- Custom Right-Click Context Menu -->
+<div id="contextMenu">
+  <div id="ctxHeader" style="font-weight:bold; color:#666; cursor:default; pointer-events:none;">Node Menu</div>
+  <div class="ctx-sep"></div>
+  <div id="ctxSetWp">🟢 Change to Waypoint</div>
+  <div id="ctxSetBl">🔴 Change to Building</div>
+  <div id="ctxSetEntrance">🚪 Change to Building Entrance</div>
+  <div id="ctxSetGate">🟣 Change to Gate</div>
+  <div id="ctxSetCross">🚶 Change to Street Crossing</div>
+  <div id="ctxSetBridge">🌉 Change to Bridge Crossing</div>
+  <div id="ctxSetStairs">🪜 Change to Stairs</div>
+  <div class="ctx-sep"></div>
+  <div id="ctxRename">✏️ Rename / Label Node</div>
+  <div id="ctxDel" style="color:var(--danger)">🗑️ Delete Node</div>
+</div>
+
+<script>
+// Shortcut DOM utility & SVG Namespace
+const $= id => document.getElementById(id), svg =$('svg'), canvasGroup = $('canvasGroup'), NS = 'http://www.w3.org/2000/svg';
+
+// Tooltip instructions mapped by active mode
+const helps = {
+  wp: 'Click walkways to place connected waypoints. Different point types won\'t snap together. <b>Hold Alt</b>: Disable snapping | <b>Right-click</b> node to convert type. <b>Space+Drag</b>: Pan.',
+  bl: 'Click near facility entrances to place building destinations. <b>Hold Alt</b>: Disable snapping | Double-click to rename. <b>Esc</b>: Deselect.',
+  sp: 'Place strict constraints (Gates, Entrances, Bridges, Crossings, Stairs). <b>Hold Alt</b>: Disable snapping | <b>Right-click</b> to change type.',
+  ln: 'Click any two nodes sequentially to toggle path connections. Crossing paths split automatically. <b>Esc</b>: Cancel preview.',
+  off: 'Click existing path segments to toggle them as <b>Official Preferred Routes</b> (gold). Navigation will prefer these main thoroughfares.',
+  mv: 'Click and drag anywhere on canvas to move ALL nodes & pathways together. Realigns layout after swapping map image.',
+  sc: 'Click and drag inward or outward relative to graph center to scale ALL node coordinates uniformly.',
+  del: 'Click any node to remove it and prune connected path edges, or click any blue path segment to delete that specific connection link.'
+};
+
+// Global State Variables
+let W = 1410, H = 840, imgName = 'campus-map.webp', mode = 'wp';
+let sel = null, linkFrom = null, nodes = {}, edgeMeta = {}, seq = 1, drag = null, moved = false;
+let groupDragStart = null, scaleDragStart = null, scaleOriginNodes = null;
+let contextTargetId = null;
+const SNAP_DIST = 14; // Magnetic snap radius in pixels
+
+// Pan & Zoom Engine State
+let zoomScale = 1;
+let panX = 0, panY = 0;
+let isPanning = false, panStart = { x: 0, y: 0 };
+let isSpacePressed = false;
+const MIN_ZOOM = 0.05, MAX_ZOOM = 50;
+
+// Undo & Redo History System Stacks
+let historyStack = [];
+let redoStack = [];
+const MAX_HISTORY = 50;
+
+// Helper: Generates unique symmetrical key for edge lookup
+function edgeKey(a, b) {
+  return a < b ? `${a}--${b}` : `${b}--${a}`;
+}
+
+// History: Pushes current graph snapshot into history stack
+function pushState() {
+  historyStack.push(JSON.stringify({ nodes, edgeMeta, seq }));
+  if (historyStack.length > MAX_HISTORY) historyStack.shift();
+  redoStack = [];
+  updateHistoryButtons();
+}
+
+// History: Updates UI enable/disable states for Undo/Redo buttons
+function updateHistoryButtons() {
+  $('undo').disabled = historyStack.length === 0;
+  $('redo').disabled = redoStack.length === 0;
+}
+
+// History: Reverts graph to previous state
+function undo() {
+  if (historyStack.length === 0) return;
+  redoStack.push(JSON.stringify({ nodes, edgeMeta, seq }));
+  const state = JSON.parse(historyStack.pop());
+  nodes = state.nodes;
+  edgeMeta = state.edgeMeta || {};
+  seq = state.seq;
+  sel = null; linkFrom = null;
+  draw(); updateRubberBand({ x: 0, y: 0 }, false); persist(false);
+  updateHistoryButtons();
+}
+
+// History: Re-applies undone state
+function redo() {
+  if (redoStack.length === 0) return;
+  historyStack.push(JSON.stringify({ nodes, edgeMeta, seq }));
+  const state = JSON.parse(redoStack.pop());
+  nodes = state.nodes;
+  edgeMeta = state.edgeMeta || {};
+  seq = state.seq;
+  sel = null; linkFrom = null;
+  draw(); updateRubberBand({ x: 0, y: 0 }, false); persist(false);
+  updateHistoryButtons();
+}
+
+// Pan/Zoom: Applies current pan offsets and zoom scale to SVG transform group
+function updateTransform() {
+  canvasGroup.setAttribute('transform', `translate(${panX}, ${panY}) scale(${zoomScale})`);
+  draw(); // Re-render to update dynamic node/edge sizes
+}
+
+// Resets SVG canvas viewport bounds
 function setSize() {
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  svg.style.width = W * zoom + 'px'; svg.style.height = H * zoom + 'px';
-  $('bg').setAttribute('width', W);$('bg').setAttribute('height', H);
+  $('bg').setAttribute('width', W);
+  $('bg').setAttribute('height', H);
+  updateTransform();
 }
-function fit() { zoom = Math.min(1, (innerWidth - 20) / W); setSize(); }
+
+// Automatically fits campus image inside current window viewport
+function fit() { 
+  const container = $('wrap');
+  const availableW = container.clientWidth;
+  const availableH = container.clientHeight;
+  zoomScale = Math.min(availableW / W, availableH / H) * 0.95;
+  panX = (availableW - W * zoomScale) / 2;
+  panY = (availableH - H * zoomScale) / 2;
+  setSize(); 
+}
+
+// Transforms screen mouse event coordinates into raw SVG pixel space
 function pt(e) {
   const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY;
-  const q = p.matrixTransform(svg.getScreenCTM().inverse());
+  const q = p.matrixTransform(canvasGroup.getScreenCTM().inverse());
   return { x: Math.round(q.x), y: Math.round(q.y) };
 }
+
+// Math Utility: Calculates shortest distance from point P to line segment AB
+function distToSegment(p, a, b) {
+  const l2 = (b.x - a.x) ** 2 + (b.y - a.y) ** 2;
+  if (l2 === 0) return { dist: Math.hypot(p.x - a.x, p.y - a.y), proj: a };
+  let t = ((p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y)) / l2;
+  t = Math.max(0, Math.min(1, t));
+  const proj = { x: Math.round(a.x + t * (b.x - a.x)), y: Math.round(a.y + t * (b.y - a.y)) };
+  return { dist: Math.hypot(p.x - proj.x, p.y - proj.y), proj, t };
+}
+
+// Snapping Guard: Prevents different specialized node types from magnetizing to each other
+function canSnapTypes(sourceType, targetType) {
+  if (sourceType === 'waypoint' || targetType === 'waypoint') return true;
+  return sourceType === targetType;
+}
+
+// Snapping Engine: Finds nearest magnetic target node or edge segment
+function findSnapLocation(point, ignoreId = null, disableSnap = false) {
+  if (disableSnap) return { type: 'none', point };
+
+  const sourceNode = ignoreId ? nodes[ignoreId] : null;
+  const sourceType = sourceNode ? (sourceNode.strict_type || sourceNode.type) : (mode === 'bl' ? 'building' : mode === 'sp' ? 'strict' : 'waypoint');
+
+  let closestNode = null, minDistNode = SNAP_DIST / zoomScale;
+  for (const [id, n] of Object.entries(nodes)) {
+    if (id === ignoreId) continue;
+    const targetType = n.strict_type || n.type;
+    
+    if (!canSnapTypes(sourceType, targetType)) continue;
+
+    const dist = Math.hypot(n.x - point.x, n.y - point.y);
+    if (dist < minDistNode) { minDistNode = dist; closestNode = id; }
+  }
+  if (closestNode) return { type: 'node', id: closestNode, point: nodes[closestNode] };
+
+  let closestEdge = null, minDistEdge = SNAP_DIST / zoomScale;
+  for (const [id, n] of Object.entries(nodes)) {
+    if (id === ignoreId) continue;
+    for (const o of n.connects_to) {
+      if (id < o && o !== ignoreId) {
+        const m = nodes[o];
+        const res = distToSegment(point, n, m);
+        if (res.dist < minDistEdge && res.t > 0.05 && res.t < 0.95) {
+          minDistEdge = res.dist;
+          closestEdge = { a: id, b: o, proj: res.proj };
+        }
+      }
+    }
+  }
+  if (closestEdge) return { type: 'edge', edge: closestEdge, point: closestEdge.proj };
+
+  return { type: 'none', point };
+}
+
+// Math Utility: Intersection detection between two line segments AB and CD
+function getLineIntersection(a, b, c, d) {
+  const denominator = (b.x - a.x) * (d.y - c.y) - (b.y - a.y) * (d.x - c.x);
+  if (denominator === 0) return null;
+  const uA = ((c.x - a.x) * (d.y - c.y) - (c.y - a.y) * (d.x - c.x)) / denominator;
+  const uB = ((c.x - a.x) * (b.y - a.y) - (c.y - a.y) * (b.x - a.x)) / denominator;
+  if (uA > 0.02 && uA < 0.98 && uB > 0.02 && uB < 0.98) {
+    return {
+      x: Math.round(a.x + uA * (b.x - a.x)),
+      y: Math.round(a.y + uA * (b.y - a.y))
+    };
+  }
+  return null;
+}
+
+// Graph Linker: Connects or disconnects two nodes
 function link(a, b) {
   const A = nodes[a], B = nodes[b]; if (!A || !B || a === b) return;
+  const key = edgeKey(a, b);
   if (A.connects_to.includes(b)) {
     A.connects_to = A.connects_to.filter(i => i !== b);
     B.connects_to = B.connects_to.filter(i => i !== a);
-  } else { A.connects_to.push(b); B.connects_to.push(a); }
-}
-function add(x, y, type) {
-  let id; const b = type === 'building';
-  do { id = (b ? 'b_' : 'wp_') + seq++; } while (nodes[id]);
-  nodes[id] = { x, y, type, name: b ? (prompt('Building name:', 'Building ' + (seq - 1)) || id) : null, connects_to: [] };
-  return id;
-}
-function draw() {
-  const E = $('edges'), N =$('nodes'); E.innerHTML = ''; N.innerHTML = '';
-  for (const [id, n] of Object.entries(nodes)) for (const o of n.connects_to) if (id < o) {
-    const m = nodes[o];
-    E.insertAdjacentHTML('beforeend', `<line x1="${n.x}" y1="${n.y}" x2="${m.x}" y2="${m.y}" stroke="#0077cc" stroke-width="3" opacity=".85"/>`);
+    delete edgeMeta[key];
+  } else { 
+    A.connects_to.push(b); B.connects_to.push(a); 
+    splitIntersectingEdges(a, b);
   }
+}
+
+// Auto-Junction Splitter: Splits overlapping lines into clean junction nodes
+function splitIntersectingEdges(newA, newB) {
+  const A = nodes[newA], B = nodes[newB];
+  if (!A || !B) return;
+
   for (const [id, n] of Object.entries(nodes)) {
-    const b = n.type === 'building', c = document.createElementNS(NS, 'circle');
-    c.setAttribute('cx', n.x); c.setAttribute('cy', n.y); c.setAttribute('r', b ? 9 : 5);
-    c.setAttribute('fill', id === sel ? '#ffcc00' : id === linkFrom ? '#ff8800' : b ? '#e85d5d' : '#5dcaa5');
-    c.setAttribute('stroke', b ? '#d62828' : '#1d9e75'); c.setAttribute('stroke-width', 2);
-    c.dataset.id = id; N.appendChild(c);
-    if (b) {
-      const t = document.createElementNS(NS, 'text');
-      t.setAttribute('x', n.x + 12); t.setAttribute('y', n.y + 4); t.textContent = n.name; N.appendChild(t);
+    if (id === newA || id === newB) continue;
+    for (const o of [...n.connects_to]) {
+      if (id < o && o !== newA && o !== newB) {
+        const m = nodes[o];
+        const inter = getLineIntersection(A, B, n, m);
+        if (inter) {
+          const origKey = edgeKey(id, o);
+          const wasOfficial = edgeMeta[origKey] && edgeMeta[origKey].is_official;
+          
+          const junctionId = add(inter.x, inter.y, 'waypoint');
+          link(id, o); 
+          link(newA, newB);
+          link(id, junctionId);
+          link(o, junctionId);
+          link(newA, junctionId);
+          link(newB, junctionId);
+
+          if (wasOfficial) {
+            edgeMeta[edgeKey(id, junctionId)] = { is_official: true };
+            edgeMeta[edgeKey(junctionId, o)] = { is_official: true };
+          }
+          return;
+        }
+      }
     }
   }
 }
-function persist() {
-  try { localStorage.setItem('campusEditor', JSON.stringify({ imgName, W, H, nodes, seq, mpp: $('mpp').value, data:$('bg').getAttribute('href') })); } catch (e) {}
+
+// Node Factory: Adds a new node of a given type
+function add(x, y, type) {
+  let id; 
+  const isBuilding = type === 'building';
+  const isStrict = type === 'strict';
+
+  do { 
+    id = (isBuilding ? 'b_' : isStrict ? 'gate_' : 'wp_') + seq++; 
+  } while (nodes[id]);
+
+  let name = null;
+  let strictType = null;
+
+  if (isBuilding) {
+    name = prompt('Building name:', 'Building ' + (seq - 1)) || id;
+  } else if (isStrict) {
+    const choice = prompt('Select Strict Point Type:\n1 = Gate / Entry Point\n2 = Designated Street Crossing\n3 = Building Entrance\n4 = Bridge Crossing\n5 = Stairs', '1');
+    if (choice === '2') strictType = 'crossing';
+    else if (choice === '3') strictType = 'entrance';
+    else if (choice === '4') strictType = 'bridge';
+    else if (choice === '5') strictType = 'stairs';
+    else strictType = 'gate';
+    name = prompt('Point Label:', strictType === 'gate' ? 'Burgos Gate' : strictType === 'entrance' ? 'Main Entrance' : strictType === 'bridge' ? 'Pedestrian Bridge' : strictType === 'stairs' ? 'Outdoor Stairs' : 'Pedestrian Crossing') || id;
+  }
+
+  nodes[id] = { 
+    x, y, type, 
+    name, 
+    is_strict: isStrict, 
+    strict_type: strictType,
+    connects_to: [] 
+  };
+  return id;
+}
+
+// Edge Splitter: Inserts a junction node along an existing line segment
+function splitEdge(a, b, newPoint) {
+  const origKey = edgeKey(a, b);
+  const wasOfficial = edgeMeta[origKey] && edgeMeta[origKey].is_official;
+
+  const nid = add(newPoint.x, newPoint.y, 'waypoint');
+  link(a, b);
+  link(a, nid);
+  link(nid, b);
+
+  if (wasOfficial) {
+    edgeMeta[edgeKey(a, nid)] = { is_official: true };
+    edgeMeta[edgeKey(nid, b)] = { is_official: true };
+  }
+
+  return nid;
+}
+
+// Connectivity Analysis: Finds orphan/unreachable node sub-graphs
+function findDisconnectedNodes() {
+  const nodeKeys = Object.keys(nodes);
+  if (nodeKeys.length === 0) return [];
+
+  const startId = nodeKeys[0];
+  const visited = new Set([startId]);
+  const queue = [startId];
+
+  while (queue.length > 0) {
+    const currentId = queue.shift();
+    const curr = nodes[currentId];
+    if (curr && Array.isArray(curr.connects_to)) {
+      curr.connects_to.forEach(neighborId => {
+        if (!visited.has(neighborId) && nodes[neighborId]) {
+          visited.add(neighborId);
+          queue.push(neighborId);
+        }
+      });
+    }
+  }
+
+  return nodeKeys.filter(id => !visited.has(id));
+}
+
+// Graph Math: Computes geometric centroid of all placed nodes
+function getGraphCenter() {
+  const keys = Object.keys(nodes);
+  if (keys.length === 0) return { x: W / 2, y: H / 2 };
+  let sumX = 0, sumY = 0;
+  keys.forEach(k => { sumX += nodes[k].x; sumY += nodes[k].y; });
+  return { x: sumX / keys.length, y: sumY / keys.length };
+}
+
+// Main Render Engine with Clamped Adaptive Zoom Scaling
+function draw() {
+  const E = $('edges'), N = $('nodes'); E.innerHTML = ''; N.innerHTML = '';
+  
+  const disconnected = findDisconnectedNodes();
+  const disconnectedSet = new Set(disconnected);
+  
+  const statusEl = $('graphStatus');
+  if (Object.keys(nodes).length === 0) {
+    statusEl.className = 'ok'; statusEl.textContent = 'Graph Empty';
+  } else if (disconnected.length > 0) {
+    statusEl.className = 'warn'; statusEl.textContent = `⚠ ${disconnected.length} Unconnected Node(s)`;
+  } else {
+    statusEl.className = 'ok'; statusEl.textContent = '✓ All Nodes Connected';
+  }
+
+  // Calculate inverse zoom multiplier for rendering scale
+  const rawInvScale = 1 / zoomScale;
+
+  // Clamping Helper: Bounds dynamic sizing between a minimum and maximum pixel size
+  const clamp = (val, min, max) => Math.max(min, Math.min(max, val));
+
+  // Clamped Sizing Formulas for Edges & Nodes
+  const stdLineWidth = clamp(5 * rawInvScale, 1.8, 10);
+  const offLineWidth = clamp(8 * rawInvScale, 2.5, 14);
+  const nodeRadiusSpec = clamp(7 * rawInvScale, 3.5, 12);
+  const nodeRadiusStd  = clamp(4.5 * rawInvScale, 2.5, 8);
+  const nodeStrokeWidth = clamp(2 * rawInvScale, 1, 4);
+
+  // Draw Edges
+  for (const [id, n] of Object.entries(nodes)) for (const o of n.connects_to) if (id < o) {
+    const m = nodes[o];
+    const key = edgeKey(id, o);
+    const isOfficial = edgeMeta[key] && edgeMeta[key].is_official;
+
+    const l = document.createElementNS(NS, 'line');
+    l.setAttribute('x1', n.x); l.setAttribute('y1', n.y);
+    l.setAttribute('x2', m.x); l.setAttribute('y2', m.y);
+    l.setAttribute('stroke', isOfficial ? '#f39c12' : '#0077cc'); 
+    l.setAttribute('stroke-width', isOfficial ? offLineWidth : stdLineWidth);
+    l.setAttribute('opacity', isOfficial ? '0.95' : '.85');
+    l.dataset.edgeA = id; l.dataset.edgeB = o;
+    
+    l.addEventListener('mouseenter', () => l.classList.add('edge-hover'));
+    l.addEventListener('mouseleave', () => l.classList.remove('edge-hover'));
+    E.appendChild(l);
+  }
+
+  // Draw Nodes
+  for (const [id, n] of Object.entries(nodes)) {
+    const b = n.type === 'building';
+    const sp = n.type === 'strict' || n.is_strict;
+    const isDisconnected = disconnectedSet.has(id);
+    const st = n.strict_type;
+
+    if (isDisconnected) {
+      const ring = document.createElementNS(NS, 'circle');
+      ring.setAttribute('cx', n.x); ring.setAttribute('cy', n.y);
+      ring.setAttribute('fill', 'none'); ring.setAttribute('stroke', '#d62828');
+      ring.setAttribute('stroke-width', clamp(2.5 * rawInvScale, 1.2, 5)); ring.setAttribute('class', 'warn-pulse');
+      N.appendChild(ring);
+    }
+
+    const c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', n.x); c.setAttribute('cy', n.y); 
+    c.setAttribute('r', b || sp ? nodeRadiusSpec : nodeRadiusStd);
+    
+    let nodeColor = id === sel ? '#ffcc00' : id === linkFrom ? '#ff8800' : isDisconnected ? '#d62828' : b ? '#e85d5d' : '#5dcaa5';
+    let strokeColor = isDisconnected ? '#ff0000' : b ? '#d62828' : '#1d9e75';
+
+    if (sp) {
+      if (st === 'entrance') { nodeColor = '#27ae60'; strokeColor = '#1e8449'; }
+      else if (st === 'bridge') { nodeColor = '#d35400'; strokeColor = '#a04000'; }
+      else if (st === 'stairs') { nodeColor = '#00bc8c'; strokeColor = '#008b66'; }
+      else { nodeColor = '#8e44ad'; strokeColor = '#5b2c6f'; }
+    }
+
+    c.setAttribute('fill', nodeColor);
+    c.setAttribute('stroke', strokeColor); 
+    c.setAttribute('stroke-width', nodeStrokeWidth);
+    c.dataset.id = id; N.appendChild(c);
+
+    // Render Text Labels
+    if (b || sp || isDisconnected || n.name) {
+      const gText = document.createElementNS(NS, 'g');
+      const textScale = clamp(rawInvScale, 0.4, 1.8);
+      gText.setAttribute('transform', `translate(${n.x + 9 * textScale}, ${n.y + 4 * textScale}) scale(${textScale})`);
+      
+      const t = document.createElementNS(NS, 'text');
+      t.setAttribute('x', 0); t.setAttribute('y', 0); 
+      const prefix = isDisconnected ? '⚠ ' : '';
+      t.textContent = prefix + (n.name || id);
+      if (isDisconnected) t.setAttribute('fill', '#d62828');
+      else if (sp) t.setAttribute('fill', strokeColor);
+
+      gText.appendChild(t);
+      N.appendChild(gText);
+    }
+  }
+}
+
+// Rubber-band Connection Line Preview
+function updateRubberBand(point, disableSnap = false) {
+  const rb = $('rubberBand');
+  const activeOrigin = linkFrom || (mode === 'wp' || mode === 'sp' ? sel : null);
+  
+  if (activeOrigin && nodes[activeOrigin] && (mode === 'ln' || mode === 'wp' || mode === 'sp')) {
+    const orig = nodes[activeOrigin];
+    const snap = findSnapLocation(point, activeOrigin, disableSnap);
+
+    rb.setAttribute('x1', orig.x); rb.setAttribute('y1', orig.y);
+    rb.setAttribute('x2', snap.point.x); rb.setAttribute('y2', snap.point.y);
+    rb.setAttribute('stroke-width', Math.max(1.5, Math.min(6, 3 / zoomScale)));
+    rb.setAttribute('opacity', '0.8');
+  } else {
+    rb.setAttribute('opacity', '0');
+  }
+}
+
+// LocalStorage Persistence
+function persist(recordHistory = true) {
+  if (recordHistory) pushState();
+  try { localStorage.setItem('campusEditor', JSON.stringify({ imgName, W, H, nodes, edgeMeta, seq, mpp: $('mpp').value, data:$('bg').getAttribute('href') })); } catch (e) {}
 }
 function restore() {
   try {
     const s = JSON.parse(localStorage.getItem('campusEditor') || 'null'); if (!s) return;
-    ({ imgName, W, H, nodes, seq } = s); $('mpp').value = s.mpp; if (s.data)$('bg').setAttribute('href', s.data);
+    ({ imgName, W, H, nodes, seq } = s); 
+    edgeMeta = s.edgeMeta || {};
+    $('mpp').value = s.mpp; if (s.data)$('bg').setAttribute('href', s.data);
   } catch (e) {}
 }
 const idOf = e => e.target.dataset && e.target.dataset.id;
 
-svg.addEventListener('mousedown', e => { const id = idOf(e); if (id) { drag = id; moved = false; e.preventDefault(); } });
-addEventListener('mousemove', e => {
-  if (!drag) return; const p = pt(e);
-  nodes[drag].x = p.x; nodes[drag].y = p.y; moved = true; draw();
-});
-addEventListener('mouseup', () => { if (drag) persist(); drag = null; });
-svg.addEventListener('click', e => {
-  if (moved) { moved = false; return; }
+// Context Menu Visibility Handlers
+function hideContextMenu() {
+  $('contextMenu').style.display = 'none';
+  contextTargetId = null;
+}
+
+function showContextMenu(x, y, node) {
+  contextTargetId = node;
+  const menu = $('contextMenu');
+  $('ctxHeader').innerText = `Node: ${node}`;
+  menu.style.left = `${x}px`;
+  menu.style.top = `${y}px`;
+  menu.style.display = 'block';
+}
+
+// Right-Click Context Menu Trigger
+svg.addEventListener('contextmenu', e => {
+  e.preventDefault();
   const id = idOf(e);
-  if (mode === 'del') {
-    if (id) { Object.values(nodes).forEach(n => n.connects_to = n.connects_to.filter(i => i !== id)); delete nodes[id]; if (sel === id) sel = null; }
-  } else if (mode === 'ln') {
-    if (id) { if (linkFrom && linkFrom !== id) { link(linkFrom, id); linkFrom = null; } else linkFrom = id; }
-  } else if (id) { sel = id; }
-  else {
-    const p = pt(e), nid = add(p.x, p.y, mode === 'bl' ? 'building' : 'waypoint');
-    if (sel) link(sel, nid);
-    if (mode === 'wp') sel = nid;
+  if (id) {
+    showContextMenu(e.clientX, e.clientY, id);
+  } else {
+    hideContextMenu();
   }
-  draw(); persist();
 });
+
+addEventListener('click', e => {
+  if (!e.target.closest('#contextMenu')) hideContextMenu();
+});
+
+// Context Menu Action Listeners
+$('ctxSetWp').onclick = () => {
+  if (!contextTargetId || !nodes[contextTargetId]) return;
+  pushState();
+  const n = nodes[contextTargetId];
+  n.type = 'waypoint'; n.is_strict = false; n.strict_type = null; n.name = null;
+  draw(); persist(false); hideContextMenu();
+};
+
+$('ctxSetBl').onclick = () => {
+  if (!contextTargetId || !nodes[contextTargetId]) return;
+  pushState();
+  const n = nodes[contextTargetId];
+  n.type = 'building'; n.is_strict = false; n.strict_type = null;
+  n.name = prompt('Building name:', n.name || 'Building') || contextTargetId;
+  draw(); persist(false); hideContextMenu();
+};
+
+$('ctxSetEntrance').onclick = () => {
+  if (!contextTargetId || !nodes[contextTargetId]) return;
+  pushState();
+  const n = nodes[contextTargetId];
+  n.type = 'strict'; n.is_strict = true; n.strict_type = 'entrance';
+  n.name = prompt('Entrance Label:', n.name || 'Main Entrance') || contextTargetId;
+  draw(); persist(false); hideContextMenu();
+};
+
+$('ctxSetGate').onclick = () => {
+  if (!contextTargetId || !nodes[contextTargetId]) return;
+  pushState();
+  const n = nodes[contextTargetId];
+  n.type = 'strict'; n.is_strict = true; n.strict_type = 'gate';
+  n.name = prompt('Gate Label:', n.name || 'Burgos Gate') || contextTargetId;
+  draw(); persist(false); hideContextMenu();
+};
+
+$('ctxSetCross').onclick = () => {
+  if (!contextTargetId || !nodes[contextTargetId]) return;
+  pushState();
+  const n = nodes[contextTargetId];
+  n.type = 'strict'; n.is_strict = true; n.strict_type = 'crossing';
+  n.name = prompt('Crossing Label:', n.name || 'Pedestrian Crossing') || contextTargetId;
+  draw(); persist(false); hideContextMenu();
+};
+
+$('ctxSetBridge').onclick = () => {
+  if (!contextTargetId || !nodes[contextTargetId]) return;
+  pushState();
+  const n = nodes[contextTargetId];
+  n.type = 'strict'; n.is_strict = true; n.strict_type = 'bridge';
+  n.name = prompt('Bridge Label:', n.name || 'Pedestrian Bridge') || contextTargetId;
+  draw(); persist(false); hideContextMenu();
+};
+
+$('ctxSetStairs').onclick = () => {
+  if (!contextTargetId || !nodes[contextTargetId]) return;
+  pushState();
+  const n = nodes[contextTargetId];
+  n.type = 'strict'; n.is_strict = true; n.strict_type = 'stairs';
+  n.name = prompt('Stairs Label:', n.name || 'Outdoor Stairs') || contextTargetId;
+  draw(); persist(false); hideContextMenu();
+};
+
+$('ctxRename').onclick = () => {
+  if (!contextTargetId || !nodes[contextTargetId]) return;
+  pushState();
+  const n = nodes[contextTargetId];
+  const newName = prompt('New Label / Name:', n.name || contextTargetId);
+  if (newName !== null) { n.name = newName; draw(); persist(false); }
+  hideContextMenu();
+};
+
+$('ctxDel').onclick = () => {
+  if (!contextTargetId || !nodes[contextTargetId]) return;
+  pushState();
+  const id = contextTargetId;
+  Object.values(nodes).forEach(n => n.connects_to = n.connects_to.filter(i => i !== id)); 
+  delete nodes[id]; 
+  if (sel === id) sel = null; 
+  if (linkFrom === id) linkFrom = null;
+  draw(); persist(false); hideContextMenu();
+};
+
+// Mouse Drag & Pan Start Handler
+svg.addEventListener('mousedown', e => { 
+  if (e.button === 1 || isSpacePressed) {
+    isPanning = true;
+    panStart = { x: e.clientX - panX, y: e.clientY - panY };
+    svg.style.cursor = 'grabbing';
+    e.preventDefault();
+    return;
+  }
+
+  if (e.button === 2) return;
+
+  const p = pt(e);
+  const id = idOf(e); 
+  
+  if (mode === 'mv') {
+    pushState(); groupDragStart = p; moved = false; e.preventDefault();
+  } else if (mode === 'sc') {
+    pushState(); scaleDragStart = p; scaleOriginNodes = JSON.parse(JSON.stringify(nodes)); moved = false; e.preventDefault();
+  } else if (id) {
+    drag = id; moved = false; e.preventDefault();
+  } 
+});
+
+// Mouse Drag & Cursor Movement Handler
+addEventListener('mousemove', e => {
+  if (isPanning) {
+    panX = e.clientX - panStart.x;
+    panY = e.clientY - panStart.y;
+    updateTransform();
+    return;
+  }
+
+  const p = pt(e);
+  const disableSnap = e.altKey;
+
+  if (mode === 'mv' && groupDragStart) {
+    const dx = p.x - groupDragStart.x;
+    const dy = p.y - groupDragStart.y;
+    if (dx !== 0 || dy !== 0) {
+      Object.values(nodes).forEach(n => { n.x += dx; n.y += dy; });
+      groupDragStart = p; moved = true; draw();
+    }
+  } else if (mode === 'sc' && scaleDragStart && scaleOriginNodes) {
+    const center = getGraphCenter();
+    const initDist = Math.hypot(scaleDragStart.x - center.x, scaleDragStart.y - center.y) || 1;
+    const currDist = Math.hypot(p.x - center.x, p.y - center.y);
+    const scaleFactor = currDist / initDist;
+
+    Object.keys(nodes).forEach(k => {
+      const orig = scaleOriginNodes[k];
+      nodes[k].x = Math.round(center.x + (orig.x - center.x) * scaleFactor);
+      nodes[k].y = Math.round(center.y + (orig.y - center.y) * scaleFactor);
+    });
+
+    moved = true; draw();
+  } else if (drag) {
+    const snap = findSnapLocation(p, drag, disableSnap);
+    nodes[drag].x = snap.point.x; nodes[drag].y = snap.point.y; 
+    moved = true; draw();
+  }
+  updateRubberBand(p, disableSnap);
+});
+
+// Mouse Up Handler
+addEventListener('mouseup', () => { 
+  if (isPanning) {
+    isPanning = false;
+    svg.style.cursor = isSpacePressed ? 'grab' : 'crosshair';
+    return;
+  }
+  if (mode === 'mv' && groupDragStart) {
+    if (moved) persist(false); groupDragStart = null;
+  } else if (mode === 'sc' && scaleDragStart) {
+    if (moved) persist(false); scaleDragStart = null; scaleOriginNodes = null;
+  } else if (drag && moved) {
+    persist();
+  }
+  drag = null; 
+});
+
+// SVG Canvas Click Event Router
+svg.addEventListener('click', e => {
+  if (e.button === 2) return;
+  if (moved || isPanning) { moved = false; return; }
+  const id = idOf(e);
+  const p = pt(e);
+  const disableSnap = e.altKey;
+  const edgeA = e.target.dataset && e.target.dataset.edgeA;
+  const edgeB = e.target.dataset && e.target.dataset.edgeB;
+
+  if (mode === 'mv' || mode === 'sc') return;
+
+  pushState();
+
+  if (mode === 'off') {
+    if (edgeA && edgeB) {
+      const key = edgeKey(edgeA, edgeB);
+      if (!edgeMeta[key]) edgeMeta[key] = {};
+      edgeMeta[key].is_official = !edgeMeta[key].is_official;
+      draw(); persist(false);
+    }
+    return;
+  }
+
+  if (mode === 'del') {
+    if (id) { 
+      Object.values(nodes).forEach(n => n.connects_to = n.connects_to.filter(i => i !== id)); 
+      delete nodes[id]; 
+      if (sel === id) sel = null; 
+      if (linkFrom === id) linkFrom = null;
+    } else if (edgeA && edgeB) {
+      link(edgeA, edgeB);
+    }
+  } else if (mode === 'ln') {
+    if (id) { 
+      if (linkFrom && linkFrom !== id) { 
+        link(linkFrom, id); linkFrom = id; 
+      } else {
+        linkFrom = id; 
+      }
+    } else {
+      const snap = findSnapLocation(p, linkFrom, disableSnap);
+      if (snap.type === 'edge') {
+        const nid = splitEdge(snap.edge.a, snap.edge.b, snap.point);
+        if (linkFrom) link(linkFrom, nid);
+        linkFrom = nid;
+      } else {
+        linkFrom = null;
+      }
+    }
+  } else {
+    if (id) { 
+      if (e.shiftKey && sel && sel !== id) { link(sel, id); }
+      sel = id; 
+    } else if (edgeA && edgeB && !disableSnap) {
+      const nid = splitEdge(edgeA, edgeB, p);
+      sel = nid;
+    } else {
+      const snap = findSnapLocation(p, sel, disableSnap);
+      if (snap.type === 'node') {
+        if (sel && sel !== snap.id) link(sel, snap.id);
+        sel = snap.id;
+      } else if (snap.type === 'edge') {
+        const nid = splitEdge(snap.edge.a, snap.edge.b, snap.point);
+        if (sel) link(sel, nid);
+        sel = nid;
+      } else {
+        const nodeType = mode === 'bl' ? 'building' : mode === 'sp' ? 'strict' : 'waypoint';
+        const nid = add(p.x, p.y, nodeType);
+        if (sel) link(sel, nid);
+        if (mode === 'wp' || mode === 'bl' || mode === 'sp') sel = nid;
+      }
+    }
+  }
+  draw(); 
+  updateRubberBand(p, disableSnap);
+  persist(false);
+});
+
+// Cursor-Centered Infinite Zoom Wheel Handler
+svg.addEventListener('wheel', e => {
+  e.preventDefault();
+  const mouseX = e.clientX;
+  const mouseY = e.clientY;
+
+  const zoomFactor = e.deltaY < 0 ? 1.2 : 0.833;
+  const newScale = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoomScale * zoomFactor));
+
+  panX = mouseX - (mouseX - panX) * (newScale / zoomScale);
+  panY = mouseY - (mouseY - panY) * (newScale / zoomScale);
+  zoomScale = newScale;
+
+  updateTransform();
+}, { passive: false });
+
+// Double-Click Node Renaming Handler
 svg.addEventListener('dblclick', e => {
   const id = idOf(e);
-  if (id && nodes[id].type === 'building') {
-    const v = prompt('Building name:', nodes[id].name);
-    if (v) { nodes[id].name = v; draw(); persist(); }
+  if (id && (nodes[id].type === 'building' || nodes[id].type === 'strict' || nodes[id].is_strict)) {
+    const n = nodes[id];
+    const newName = prompt('Point label:', n.name || id);
+    if (newName) { pushState(); n.name = newName; draw(); persist(false); }
   }
 });
-document.querySelectorAll('[data-m]').forEach(b => b.onclick = () => {
-  mode = b.dataset.m; linkFrom = null;
-  document.querySelectorAll('[data-m]').forEach(x => x.classList.toggle('on', x === b));
-  $('help').textContent = helps[mode]; draw();
+
+// Keyboard Shortcuts Listener
+addEventListener('keydown', e => {
+  if (e.code === 'Space' && !isSpacePressed) {
+    isSpacePressed = true;
+    svg.style.cursor = 'grab';
+  } else if (e.key === 'Escape') {
+    sel = null; linkFrom = null; groupDragStart = null; scaleDragStart = null;
+    hideContextMenu();
+    updateRubberBand({ x: 0, y: 0 }, false);
+    draw();
+  } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+    if (e.shiftKey) redo();
+    else undo();
+    e.preventDefault();
+  } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+    redo();
+    e.preventDefault();
+  }
 });
-$('zi').onclick = () => { zoom *= 1.25; setSize(); };
-$('zo').onclick = () => { zoom /= 1.25; setSize(); };$('mpp').onchange = persist;
+
+addEventListener('keyup', e => {
+  if (e.code === 'Space') {
+    isSpacePressed = false;
+    svg.style.cursor = 'crosshair';
+  }
+});
+
+// Top Toolbar Control Event Listeners
+$('undo').onclick = undo;
+$('redo').onclick = redo;
+
+document.querySelectorAll('[data-m]').forEach(b => b.onclick = () => {
+  mode = b.dataset.m; linkFrom = null; groupDragStart = null; scaleDragStart = null;
+  document.querySelectorAll('[data-m]').forEach(x => x.classList.toggle('on', x === b));
+  $('helpText').innerHTML = helps[mode]; draw();
+});
+
+$('zi').onclick = () => {
+  const center = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+  const newScale = Math.min(MAX_ZOOM, zoomScale * 1.4);
+  panX = center.x - (center.x - panX) * (newScale / zoomScale);
+  panY = center.y - (center.y - panY) * (newScale / zoomScale);
+  zoomScale = newScale;
+  updateTransform();
+};
+
+$('zo').onclick = () => {
+  const center = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+  const newScale = Math.max(MIN_ZOOM, zoomScale / 1.4);
+  panX = center.x - (center.x - panX) * (newScale / zoomScale);
+  panY = center.y - (center.y - panY) * (newScale / zoomScale);
+  zoomScale = newScale;
+  updateTransform();
+};
+
+$('resetView').onclick = fit;
+$('mpp').onchange = () => persist(false);
+
+// Map Image Loader
 $('img').onchange = e => {
   const f = e.target.files[0]; if (!f) return;
   const r = new FileReader();
   r.onload = () => {
     const im = new Image();
-    im.onload = () => { W = im.naturalWidth; H = im.naturalHeight; imgName = f.name; $('bg').setAttribute('href', r.result); fit(); persist(); };
+    im.onload = () => { W = im.naturalWidth; H = im.naturalHeight; imgName = f.name; $('bg').setAttribute('href', r.result); fit(); persist(false); };
     im.src = r.result;
   };
   r.readAsDataURL(f);
 };
+
+// JSON Graph Exporter
 $('exp').onclick = () => {
-  const out = { image: imgName, width: W, height: H, metersPerPixel: parseFloat($('mpp').value) || 0.35, nodes };
+  const disconnected = findDisconnectedNodes();
+  if (disconnected.length > 0) {
+    const proceed = confirm(
+      `Warning: There are ${disconnected.length} disconnected node(s) in your graph:\n` +
+      `${disconnected.join(', ')}\n\n` +
+      `These points will not be reachable during navigation. Export campus-graph.json anyway?`
+    );
+    if (!proceed) return;
+  }
+
+  const out = { image: imgName, width: W, height: H, metersPerPixel: parseFloat($('mpp').value) || 0.35, nodes, edgeMeta };
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' }));
   a.download = 'campus-graph.json'; a.click();
 };
+
+// JSON Graph Importer
 $('imp').onchange = e => {
   const f = e.target.files[0]; if (!f) return;
   f.text().then(t => {
     const g = JSON.parse(t);
-    nodes = g.nodes; W = g.width; H = g.height; imgName = g.image; $('mpp').value = g.metersPerPixel;
-    seq = Object.keys(nodes).length + 1; sel = null; fit(); draw(); persist();
+    pushState();
+    nodes = g.nodes; 
+    edgeMeta = g.edgeMeta || {};
+    W = g.width; H = g.height; imgName = g.image; $('mpp').value = g.metersPerPixel;
+    seq = Object.keys(nodes).length + 1; sel = null; fit(); draw(); persist(false);
   });
 };
-$('clr').onclick = () => { if (confirm('Delete every node?')) { nodes = {}; sel = null; seq = 1; draw(); persist(); } };
 
-restore(); fit(); draw(); $('help').textContent = helps.wp;
+// Reset Entire Workspace
+$('clr').onclick = () => { 
+  if (confirm('Delete every node?')) { 
+    pushState(); nodes = {}; edgeMeta = {}; sel = null; seq = 1; draw(); persist(false); 
+  } 
+};
+
+// Boot Editor State
+restore(); fit(); draw(); $('helpText').innerHTML = helps.wp;
+window.addEventListener('resize', fit);
 </script>
 
 <script>
-  // Working SVG Coordinate Tracker
+  // SVG Coordinates HUD Tracker
   document.addEventListener('DOMContentLoaded', () => {
     const svgEl = document.getElementById('svg');
     if (!svgEl) return;
 
-    // Create floating badge on bottom-left corner
     const badge = document.createElement('div');
     badge.style.cssText = 'position:fixed; bottom:15px; left:15px; background:rgba(0,0,0,0.85); color:#00ffcc; padding:8px 14px; border-radius:6px; font-family:monospace; font-size:14px; font-weight:bold; z-index:9999; pointer-events:none; box-shadow:0 2px 8px rgba(0,0,0,0.3);';
     badge.innerText = 'X: 0, Y: 0';
     document.body.appendChild(badge);
 
     svgEl.addEventListener('mousemove', (e) => {
-      const p = svgEl.createSVGPoint();
-      p.x = e.clientX;
-      p.y = e.clientY;
-      const q = p.matrixTransform(svgEl.getScreenCTM().inverse());
-      
-      const x = Math.round(q.x);
-      const y = Math.round(q.y);
-
-      badge.innerText = `X: ${x}, Y: ${y}`;
+      const p = pt(e);
+      const snapState = e.altKey ? ' [NO SNAP]' : '';
+      badge.innerText = `X: ${p.x}, Y: ${p.y} | Scale: ${zoomScale.toFixed(2)}x${snapState}`;
     });
   });
 </script>
