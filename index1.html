@@ -54,92 +54,29 @@
       right: 16px;
       z-index: 1000;
       background: rgba(255,255,255,0.97);
-      padding: 14px;
-      border-radius: 12px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
       font-size: 13px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      width: 240px;
-    }
-    .nav2d-title {
-      font-weight: 700;
-      color: #1b4332;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
       gap: 6px;
-      margin-bottom: 4px;
-    }
-    .nav2d-field {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-    .nav2d-field label {
-      font-size: 11px;
-      font-weight: 600;
-      color: #555;
-      display: flex;
-      align-items: center;
-      gap: 4px;
+      min-width: 180px;
     }
     #nav2d-controls select, #nav2d-controls button {
-      padding: 8px 10px;
+      padding: 6px 8px;
       font-size: 13px;
-      border-radius: 8px;
+      border-radius: 6px;
       border: 1px solid #ccc;
     }
     #nav2d-controls button {
-      background: #1b4332;
+      background: #40916c;
       color: white;
       border: none;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      font-weight: 600;
-      transition: background 0.15s ease;
     }
-    #nav2d-controls button:hover {
-      background: #2d6a4f;
-    }
-    #swapBtn {
-      align-self: center;
-      background: #eef4f0 !important;
-      color: #1b4332 !important;
-      width: 32px;
-      height: 32px;
-      padding: 0 !important;
-      border-radius: 50% !important;
-      font-size: 16px;
-      margin: -2px 0;
-    }
-    #swapBtn:hover {
-      background: #dcebe2 !important;
-    }
-    #gpsBtn {
-      background: #007AFF !important;
-    }
-    #gpsBtn:hover {
-      background: #0056b3 !important;
-    }
-    #satBtn {
-      background: #6c757d !important;
-    }
-    #satBtn:hover {
-      background: #495057 !important;
-    }
-    #clearRouteBtn {
-      background: #b3261e !important;
-    }
-    #nav2dStats {
-      font-size: 12px;
-      color: #1b4332;
-      font-weight: 600;
-      line-height: 1.4;
+    #nav2d-controls button#gpsBtn {
+      background: #007AFF;
     }
 
     #view3d, #view2d, #map {
@@ -153,6 +90,7 @@
     }
     #nav2d-controls {
       left: auto !important;
+      width: auto !important;
     }
     .sidebar {
       position: fixed !important;
@@ -300,7 +238,14 @@
     .mini-popup .read-more:hover {
       text-decoration: underline;
     }
-
+    .building-2d-label {
+      background: transparent !important;
+      border: none !important;
+    }
+    .leaflet-div-icon {
+      background: transparent !important;
+      border: none !important;
+    }
     /* Info Card Panel */
     #infoCard {
       display: block !important;
@@ -406,7 +351,6 @@
   </div>
 
   <div class="sidebar-content">
-    <!-- Building Categories Section -->
     <div class="menu-section">
       <div class="menu-header">
         <i class='bx bx-buildings'></i>
@@ -443,7 +387,6 @@
       </div>
     </div>
 
-    <!-- Photos & Galleries -->
     <div class="menu-section">
       <button class="main-btn gallery-btn" onclick="window.location.href='photosgallery.html'">
         <i class='bx bx-photo-album'></i>
@@ -452,7 +395,6 @@
       </button>
     </div>
 
-    <!-- Join Us Section -->
     <div class="menu-section">
       <div class="menu-header">
         <i class='bx bx-group'></i>
@@ -470,7 +412,6 @@
       </div>
     </div>
 
-    <!-- Settings Section -->
     <div class="menu-section">
       <div class="menu-header">
         <i class='bx bx-cog'></i>
@@ -484,7 +425,6 @@
       </div>
     </div>
 
-    <!-- Back Button -->
     <div class="menu-section">
       <button class="main-btn back-btn" onclick="window.location.href='index.html'">
         <i class='bx bx-arrow-back'></i>
@@ -498,7 +438,7 @@
   <i class='bx bx-menu'></i>
 </button>
 
-<!-- View toggle: 3D visual map vs 2D point-to-point navigation -->
+<!-- View toggle -->
 <div class="view-toggle">
   <button id="btn3d" class="active" onclick="showMapView('3d')">
     <i class='bx bx-cube-alt'></i> 3D View
@@ -511,7 +451,6 @@
 <!-- 3D View -->
 <div id="view3d">
 <div id="map" style="height: 100vh; width: 100%; margin: 0; padding: 0; overflow: hidden;">
-
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
   <model-viewer
     id="campusModel"
@@ -521,37 +460,28 @@
     touch-action="pan-y"
     shadow-intensity="1"
     exposure="1"
-
     camera-orbit="-42.4547deg 64.4970deg 1147.4278"
     camera-target="-93.7274m 11.8883m -203.1199m"
-
     field-of-view="25deg"
-
     min-camera-orbit="auto 35deg 5%"
     max-camera-orbit="auto 80deg 7%"
-
     interaction-prompt="none"
-
     auto-rotate
     auto-rotate-delay="3000"
     rotation-per-second="10deg"
-
     style="width:100%; height:100vh; display:block; border:none; background:#dfe3e6;">
 
     <div class="mv-progress-bar" slot="progress-bar">
       <div class="mv-update-bar"></div>
     </div>
-
   </model-viewer>
 
-  <!-- Loading screen: walking student + progress bar -->
+  <!-- Loader animation -->
   <div class="map-loader" id="mapLoader" role="status" aria-live="polite">
     <div class="loader-card">
       <p class="loader-brand">La Salle University Interactive Campus</p>
       <p class="loader-text" id="loaderText">Loading the campus map...</p>
-
       <div class="loader-scene">
-        <!-- scrolling campus silhouettes -->
         <div class="loader-bg">
           <svg width="960" height="90" viewBox="0 0 960 90" aria-hidden="true">
             <defs>
@@ -569,51 +499,40 @@
             <rect width="960" height="90" fill="url(#ldTiles)"/>
           </svg>
         </div>
-
-        <!-- moving ground line -->
         <div class="loader-ground">
           <svg width="520" height="4" viewBox="0 0 520 4" aria-hidden="true">
             <line x1="0" y1="2" x2="520" y2="2" stroke="#fff" stroke-opacity="0.35" stroke-width="3" stroke-linecap="round" stroke-dasharray="14 12"/>
           </svg>
         </div>
-
-        <!-- the student -->
         <svg class="loader-student" width="420" height="200" viewBox="0 0 420 200" aria-hidden="true">
           <g transform="translate(130 0)">
             <ellipse class="ld-shadow" cx="80" cy="189" rx="34" ry="5" fill="#000" opacity="0.22"/>
             <g class="ld-bob">
-              <!-- far leg -->
               <g class="ld-leg ld-far">
                 <rect x="70" y="118" width="13" height="62" rx="6.5" fill="#1b2b3d"/>
                 <ellipse cx="78" cy="183" rx="12" ry="5.5" fill="#e4e4e4"/>
               </g>
-              <!-- far arm -->
               <g class="ld-arm ld-far-arm">
                 <rect x="74" y="72" width="12" height="22" rx="6" fill="#d9d6ca"/>
                 <rect x="75" y="88" width="10" height="28" rx="5" fill="#e0b088"/>
                 <circle cx="80" cy="118" r="6" fill="#e0b088"/>
               </g>
-              <!-- backpack -->
               <rect x="46" y="70" width="22" height="42" rx="9" fill="#f2c14e"/>
               <rect x="48" y="92" width="14" height="14" rx="4" fill="#d9a73a"/>
-              <!-- near leg -->
               <g class="ld-leg ld-near">
                 <rect x="70" y="118" width="13" height="62" rx="6.5" fill="#243b53"/>
                 <ellipse cx="78" cy="183" rx="12" ry="5.5" fill="#ffffff"/>
               </g>
-              <!-- neck + torso -->
               <rect x="78" y="58" width="10" height="12" rx="4" fill="#e7b48a"/>
               <rect x="60" y="66" width="40" height="58" rx="14" fill="#f7f5ee"/>
               <path d="M66 72 L72 102" stroke="#d9a73a" stroke-width="5" stroke-linecap="round"/>
               <path d="M84 67 L91 88" stroke="#2d9d5f" stroke-width="3" stroke-linecap="round"/>
               <rect x="87" y="88" width="9" height="13" rx="2" fill="#fff" stroke="#2d9d5f" stroke-width="1.5"/>
-              <!-- head -->
               <circle cx="81" cy="42" r="18" fill="#2b2118"/>
               <circle cx="86" cy="47" r="15" fill="#f1c7a0"/>
               <circle cx="78" cy="49" r="3.5" fill="#e7b48a"/>
               <circle cx="92" cy="46" r="2" fill="#2b2118"/>
               <path d="M90 54 Q94 57 98 53" fill="none" stroke="#8b4a2b" stroke-width="1.6" stroke-linecap="round"/>
-              <!-- near arm holding a campus map -->
               <g class="ld-arm ld-near-arm">
                 <rect x="74" y="72" width="12" height="22" rx="6" fill="#ece9de" stroke="#d6d3c6" stroke-width="1"/>
                 <rect x="75" y="88" width="10" height="28" rx="5" fill="#f1c7a0"/>
@@ -635,25 +554,18 @@
 </div>
 </div>
 
-<!-- 2D Navigation View -->
+<!-- 2D Navigation View (imported from index2) -->
 <div id="view2d">
   <div id="nav2d-controls">
-    <div class="nav2d-title"><i class='bx bx-map-alt'></i> Campus Navigator</div>
-    <div class="nav2d-field">
-      <label><i class='bx bx-radio-circle-marker' style="color:#2d9d5f;"></i> From</label>
-      <select id="nav2dFrom"></select>
-    </div>
-    <button id="swapBtn" onclick="swap2DRoute()" title="Swap start and end"><i class='bx bx-transfer-alt'></i></button>
-    <div class="nav2d-field">
-      <label><i class='bx bx-map-pin' style="color:#d62828;"></i> To</label>
-      <select id="nav2dTo"></select>
-    </div>
-    <button id="findRouteBtn" onclick="find2DRoute()"><i class='bx bx-directions'></i> Find Route</button>
-    <button id="clearRouteBtn" onclick="clear2DRoute()"><i class='bx bx-x'></i> Clear</button>
-    <button id="gpsBtn" onclick="toggleGPSTracking()"><i class='bx bx-current-location'></i> Enable Live GPS</button>
-    <button id="satBtn" onclick="toggleSatelliteView()"><i class='bx bx-layer'></i> Satellite Overlay</button>
-    <div id="nav2dStats"></div>
-    <div id="nav2dStatus" style="font-size:12px;color:#b00020;max-width:220px"></div>
+    <label>From:</label>
+    <select id="nav2dFrom"></select>
+    <label>To:</label>
+    <select id="nav2dTo"></select>
+    <button onclick="find2DRoute()">Find Route</button>
+    <button onclick="clear2DRoute()">Clear</button>
+    <button id="gpsBtn" onclick="toggleGPSTracking()">Enable Live GPS</button>
+    <span id="nav2dStats"></span>
+    <span id="nav2dStatus" style="font-size:12px;color:#b00020;max-width:220px"></span>
   </div>
   <div id="leafletMap" style="height: 100%; width: 100%;"></div>
 </div>
@@ -680,7 +592,6 @@
     transition: width 0.3s;
   }
 
-  /* Map loader styling */
   #map { position: relative; }
 
   .map-loader {
@@ -908,7 +819,7 @@
   }
 </script>
 
-<!-- Small popup shown first when a marker is clicked -->
+<!-- Small popup -->
 <div class="mini-popup" id="miniPopup">
   <img src="" alt="" id="miniImg" />
   <h4 id="miniTitle"></h4>
@@ -916,7 +827,7 @@
   <button class="read-more" onclick="openReadMore()">READ MORE &gt;&gt;</button>
 </div>
 
-<!-- Bigger slide-in panel -->
+<!-- Slide-in panel -->
 <div class="card" id="infoCard">
   <button id="cardClose" onclick="closeCard()">✕</button>
   <img src="" alt="Building" id="cardImg" />
@@ -940,7 +851,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-// Menu Category Toggle
+// Category Toggle
 document.getElementById('catToggle').onclick = () => {
   const subcats = document.getElementById('subcats');
   const icon = document.getElementById('catToggle').querySelector('i');
@@ -1167,7 +1078,7 @@ function showCard(title, img, desc, page) {
   }
 }
 
-// 3D Hotspot Positions
+// 3D Hotspots
 const buildingPositions = {
   "BVM Building": { position: "-109.05 18.61 -306.19", normal: "-0.00 0.97 0.24" },
   "SJ Building": { position: "-30.61 15.17 -273.21", normal: "0 1 0" },
@@ -1225,27 +1136,7 @@ function renderBuildingHotspots() {
 document.addEventListener('DOMContentLoaded', renderBuildingHotspots);
 if (document.readyState !== 'loading') renderBuildingHotspots();
 
-function enableHotspotPicker() {
-  const mv = document.querySelector('#map model-viewer');
-  mv.addEventListener('click', (event) => {
-    const rect = mv.getBoundingClientRect();
-    const hit = mv.positionAndNormalFromPoint(
-      event.clientX - rect.left,
-      event.clientY - rect.top
-    );
-    if (hit) {
-      console.log(
-        `position: "${hit.position.x.toFixed(2)} ${hit.position.y.toFixed(2)} ${hit.position.z.toFixed(2)}", ` +
-        `normal: "${hit.normal.x.toFixed(2)} ${hit.normal.y.toFixed(2)} ${hit.normal.z.toFixed(2)}"`
-      );
-    } else {
-      console.log('No surface hit at that point - click directly on the model.');
-    }
-  });
-  console.log('Hotspot picker enabled. Click any building to log its coordinates.');
-}
-
-// Search buildings array
+// Search Buildings
 const searchInput = document.getElementById('search');
 const searchResults = document.getElementById('search-results');
 const searchBtn = document.querySelector('.search-btn');
@@ -1298,7 +1189,7 @@ const buildings = [
     keywords: ["chapel", "building", "religious"],
     page: "Buildings/Star Chapel/starchapel.html",
     image: "Photos/Screenshot 2025-11-13 152006.png",
-    description: "A place of worship and reflection for the La Salle community. Mass schedule: Monday to Friday, 12:00 PM. \n Tap View Details to learn more about this building"
+    description: "A place of worship and reflection for the La Salle community. Mass schedule: Monday to Friday, 12:00 PM.\n Tap View Details to learn more about this building"
   },
   {
     name: "SC Building",
@@ -1436,7 +1327,7 @@ document.addEventListener('click', function(e) {
   }
 });
 
-// Sidebar Controls
+// Sidebar toggle
 const sidebar = document.querySelector(".sidebar");
 const toggleBtn = document.getElementById("toggleSidebar");
 const openBtn = document.getElementById("openSidebar");
@@ -1451,7 +1342,9 @@ openBtn.addEventListener("click", () => {
   openBtn.style.display = "none";
 });
 
-// View Toggle System (3D vs 2D)
+// ===========================================================
+// 3D View / 2D Navigation Toggle (from index2)
+// ===========================================================
 let leafletMapInitialized = false;
 
 function showMapView(view) {
@@ -1476,28 +1369,24 @@ function showMapView(view) {
       initLeafletNav();
       leafletMapInitialized = true;
     } else {
-      setTimeout(() => {
+      setTimeout(() => { 
         if (leafletMap) {
           leafletMap.invalidateSize();
           const bounds = [[0, 0], [MAP_H, MAP_W]];
           leafletMap.fitBounds(bounds);
-        }
+        } 
       }, 200);
     }
   }
 }
 
-// 2D Navigation Engine
+// ===========================================================
+// 2D Navigation Engine (from index2)
+// ===========================================================
 let MAP_W = 1410, MAP_H = 840, MAP_IMAGE = "campus-map.png", METERS_PER_PIXEL = 0.35;
 const GRAPH_FILE = "campus-graph.json";
 
-const toLL = (x, y) => {
-  const swLat = 8.146679, swLng = 123.842943;
-  const neLat = 8.153333, neLng = 123.848912;
-  const lat = swLat + (y / MAP_H) * (neLat - swLat);
-  const lng = swLng + (x / MAP_W) * (neLng - swLng);
-  return [lat, lng];
-};
+const toLL = (x, y) => [MAP_H - y, x];
 const navNodes = {};
 
 function sampleGraph() {
@@ -1536,7 +1425,7 @@ async function loadGraph() {
     catch (e) { throw new Error("found at " + url + " but it is not valid JSON"); }
     if (!g || !g.nodes || !g.width || !g.height) throw new Error("the JSON is missing nodes, width or height.");
   } catch (err) {
-    console.warn("Could not load " + GRAPH_FILE + ", using sample graph.", err);
+    console.warn("Could not load " + GRAPH_FILE + ", using the sample graph.", err);
     const st = document.getElementById('nav2dStatus');
     if (st) st.textContent = "campus-graph.json failed: " + err.message + ". Showing sample graph.";
     g = sampleGraph();
@@ -1589,28 +1478,26 @@ function getRouteStats(path) {
   return { meters: Math.round(meters), minutes: Math.max(1, Math.round(meters / 1.4 / 60)) };
 }
 
-let leafletMap, imgOverlay, navRouteLine, routeMarkersGroup;
+let leafletMap, navRouteLine;
 
 async function initLeafletNav() {
   await loadGraph();
   const bounds = [[0, 0], [MAP_H, MAP_W]];
 
-  const southWest = L.latLng(8.146679, 123.842943);
-  const northEast = L.latLng(8.153333, 123.848912);
-  const campusBounds = L.latLngBounds(southWest, northEast);
-
   leafletMap = L.map('leafletMap', {
-    maxBounds: campusBounds,
+    crs: L.CRS.Simple,
+    maxBounds: bounds,
     maxBoundsViscosity: 1.0,
     attributionControl: false
   });
 
-  imgOverlay = L.imageOverlay("campus-map-modified.png", campusBounds)
-    .on('error', () => console.error('Map image not found: campus-map-modified.png'))
+  const imgOverlay = L.imageOverlay(MAP_IMAGE, bounds)
+    .on('error', () => console.error('Map image not found: ' + MAP_IMAGE))
     .addTo(leafletMap);
 
   imgOverlay.once('load', () => {
     leafletMap.invalidateSize();
+    const minZoomLevel = leafletMap.getBoundsZoom(bounds, true);
     leafletMap.setMinZoom(0.3);
     leafletMap.setMaxZoom(3);
     leafletMap.fitBounds(bounds);
@@ -1618,18 +1505,19 @@ async function initLeafletNav() {
 
   setTimeout(() => {
     leafletMap.invalidateSize();
-    leafletMap.setMinZoom(0.3);
-    leafletMap.setMaxZoom(3);
+    const minZoomLevel = leafletMap.getBoundsZoom(bounds, true);
+    leafletMap.setMinZoom(minZoomLevel);
+    leafletMap.setMaxZoom(2);
     leafletMap.fitBounds(bounds);
   }, 200);
 
-  // Render Building Labels (No default red dots)
+  // Render 2D building label
   Object.entries(navNodes).forEach(([id, n]) => {
     if (n.type === "building" && n.name) {
       L.marker(toLL(n.x, n.y), {
         icon: L.divIcon({
           className: 'building-2d-label',
-          html: `<div style="font-weight:700; font-size:12px; color:#1b4332; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; white-space:nowrap; pointer-events:none;">${n.name}</div>`,
+          html: `<div style="font-weight:700; font-size:12px; color:#1b4332; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; white-space:nowrap; pointer-events:none; transform:translate(-50%, -50%);">${n.name}</div>`,
           iconSize: [0, 0],
           iconAnchor: [0, 0]
         })
@@ -1652,47 +1540,12 @@ function find2DRoute() {
   const startId = document.getElementById('nav2dFrom').value;
   const endId = document.getElementById('nav2dTo').value;
   if (startId === endId) return;
-
   clear2DRoute();
-  
   const path = findNavPath(startId, endId);
   const el = document.getElementById('nav2dStats');
-  if (!path) { 
-    if (el) el.textContent = "No connected path between these buildings."; 
-    return; 
-  }
-
-  // Render Path Polyline
-  navRouteLine = L.polyline(path.map(id => toLL(navNodes[id].x, navNodes[id].y)), {
-    color: "#fffa00",
-    weight: 5,
-    lineJoin: "round"
-  }).addTo(leafletMap);
-
-  // Render Dynamic Route Waypoint Dots
-  routeMarkersGroup = L.layerGroup().addTo(leafletMap);
-  path.forEach((id, idx) => {
-    const node = navNodes[id];
-    let color = "#ff9f43"; // Orange for path waypoints
-    let radius = 4;
-
-    if (idx === 0) {
-      color = "#27ae60"; // Green for Start Node
-      radius = 6;
-    } else if (idx === path.length - 1) {
-      color = "#d62828"; // Red for Destination Node
-      radius = 6;
-    }
-
-    L.circleMarker(toLL(node.x, node.y), {
-      radius: radius,
-      color: "#ffffff",
-      fillColor: color,
-      fillOpacity: 1,
-      weight: 2
-    }).addTo(routeMarkersGroup);
-  });
-
+  if (!path) { if (el) el.textContent = "No connected path between these buildings."; return; }
+  navRouteLine = L.polyline(path.map(id => toLL(navNodes[id].x, navNodes[id].y)),
+    { color: "#fffa00", weight: 5, lineJoin: "round" }).addTo(leafletMap);
   leafletMap.fitBounds(navRouteLine.getBounds(), { padding: [40, 40] });
 
   const s = getRouteStats(path);
@@ -1700,75 +1553,20 @@ function find2DRoute() {
 }
 
 function clear2DRoute() {
-  if (navRouteLine) { 
-    leafletMap.removeLayer(navRouteLine); 
-    navRouteLine = null; 
-  }
-  if (routeMarkersGroup) {
-    leafletMap.removeLayer(routeMarkersGroup);
-    routeMarkersGroup = null;
-  }
+  if (navRouteLine) { leafletMap.removeLayer(navRouteLine); navRouteLine = null; }
   const el = document.getElementById('nav2dStats');
   if (el) el.textContent = "";
 }
 
-function swap2DRoute() {
-  const fromSelect = document.getElementById('nav2dFrom');
-  const toSelect = document.getElementById('nav2dTo');
-  const temp = fromSelect.value;
-  fromSelect.value = toSelect.value;
-  toSelect.value = temp;
-  if (navRouteLine) find2DRoute();
-}
-
-// Satellite Overlay Integration
-let satelliteLayer = null;
-let isSatelliteActive = false;
-const SATELLITE_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-
-function toggleSatelliteView() {
-  if (!leafletMap) return;
-  const satBtn = document.getElementById("satBtn");
-
-  if (!isSatelliteActive) {
-    if (!satelliteLayer) {
-      satelliteLayer = L.tileLayer(SATELLITE_URL, {
-        maxZoom: 19,
-        attribution: 'Tiles &copy; Esri'
-      });
-    }
-    
-    satelliteLayer.addTo(leafletMap);
-    satelliteLayer.bringToBack();
-
-    if (imgOverlay) {
-      imgOverlay.setOpacity(0.45);
-    }
-
-    isSatelliteActive = true;
-    if (satBtn) satBtn.innerHTML = "<i class='bx bx-layer'></i> Hide Satellite";
-  } else {
-    if (satelliteLayer) {
-      leafletMap.removeLayer(satelliteLayer);
-    }
-    if (imgOverlay) {
-      imgOverlay.setOpacity(1.0);
-    }
-
-    isSatelliteActive = false;
-    if (satBtn) satBtn.innerHTML = "<i class='bx bx-layer'></i> Satellite Overlay";
-  }
-}
-
-// Live GPS Tracking Engine
+// ==========================================
+// GPS Tracking Engine (from index2)
+// ==========================================
 let userLocationMarker = null;
 let userAccuracyCircle = null;
 let gpsWatchId = null;
 
 const GPS_CALIBRATION = {
-  // Burgos Gate (p1)
   p1: { lat: 8.148051647993354, lng: 123.84536532533062, x: 595, y: 71 },
-  // Oval (p2)
   p2: { lat: 8.149348869567486, lng: 123.84714313116982, x: 523, y: 608 }
 };
 
@@ -1784,7 +1582,6 @@ function gpsToPixel(lat, lng) {
 }
 
 function toggleGPSTracking() {
-  const gpsBtn = document.getElementById("gpsBtn");
   if (gpsWatchId !== null) {
     navigator.geolocation.clearWatch(gpsWatchId);
     gpsWatchId = null;
@@ -1794,7 +1591,7 @@ function toggleGPSTracking() {
     userLocationMarker = null;
     userAccuracyCircle = null;
 
-    gpsBtn.innerHTML = "<i class='bx bx-current-location'></i> Enable Live GPS";
+    document.getElementById("gpsBtn").innerText = "Enable Live GPS";
     document.getElementById("nav2dStats").innerText = "GPS Tracking Disabled.";
     return;
   }
@@ -1804,16 +1601,12 @@ function toggleGPSTracking() {
     return;
   }
 
-  gpsBtn.innerText = "Locating...";
+  document.getElementById("gpsBtn").innerText = "Locating...";
 
   gpsWatchId = navigator.geolocation.watchPosition(
     onGpsSuccess,
     onGpsError,
-    {
-      enableHighAccuracy: true,
-      maximumAge: 0,
-      timeout: 10000
-    }
+    { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
   );
 }
 
@@ -1861,19 +1654,14 @@ function onGpsSuccess(position) {
   if (!userLocationMarker) {
     userLocationMarker = L.marker(leafletCoords, { icon: locationIcon })
       .addTo(leafletMap)
-      .bindTooltip("You are here", { 
-        permanent: true, 
-        direction: "top", 
-        offset: [0, -10],
-        className: "gps-tooltip"
-      })
+      .bindTooltip("You are here", { permanent: true, direction: "top", offset: [0, -10], className: "gps-tooltip" })
       .bindPopup("<b>You are here</b><br>Accuracy: ~" + Math.round(accuracy) + "m");
   } else {
     userLocationMarker.setLatLng(leafletCoords);
     userLocationMarker.getPopup().setContent("<b>You are here</b><br>Accuracy: ~" + Math.round(accuracy) + "m");
   }
 
-  document.getElementById("gpsBtn").innerHTML = "<i class='bx bx-current-location'></i> Disable Live GPS";
+  document.getElementById("gpsBtn").innerText = "Disable Live GPS";
   document.getElementById("nav2dStats").innerText = 
     `Live GPS Active (Accuracy: ~${Math.round(accuracy)}m)`;
 }
@@ -1882,7 +1670,7 @@ function onGpsError(error) {
   let message = "Unable to retrieve GPS location.";
   switch (error.code) {
     case error.PERMISSION_DENIED:
-      message = "Location access was denied. Please allow location permissions in your browser settings and check that your connection uses HTTPS.";
+      message = "Location access was denied. Please allow location permissions in your browser settings.";
       break;
     case error.POSITION_UNAVAILABLE:
       message = "Location information is unavailable. Ensure device GPS is turned on.";
@@ -1894,12 +1682,11 @@ function onGpsError(error) {
   
   const statsEl = document.getElementById("nav2dStats");
   if (statsEl) statsEl.innerText = message;
-  
   alert(message);
   toggleGPSTracking();
 }
 
-// Netlify AI Chatbot Integrations
+// Chatbot functionality
 const chatBtn = document.getElementById('chatBtn');
 const chatBox = document.getElementById('chatBox');
 const chatBody = document.getElementById('chatBody');
@@ -1979,10 +1766,18 @@ async function sendMessage() {
 }
 
 async function loadInitialOptions() {
+  if (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') {
+    showLocalOptions();
+    return;
+  }
+
   try {
     const response = await fetch(`${SERVER_URL}/options`);
-    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(`Server returned status ${response.status}`);
+    }
     
+    const data = await response.json();
     const optionsDiv = document.createElement('div');
     optionsDiv.classList.add('options');
     
@@ -2007,7 +1802,6 @@ async function loadInitialOptions() {
     chatBody.scrollTop = chatBody.scrollHeight;
     
   } catch (error) {
-    console.error('Error loading options:', error);
     showLocalOptions();
   }
 }

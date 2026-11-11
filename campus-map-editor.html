@@ -3,7 +3,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Campus map editor</title>
 <style>
-  :root{--ink:#1c2b26;--line:#b9c4bf;--accent:#1b4332;--bg:#f4f6f5;--danger:#d62828;--strict:#8e44ad;--bridge:#d35400;--entrance:#27ae60;--stairs:#00bc8c;--official:#f39c12}
+  :root{--ink:#1c2b26;--line:#b9c4bf;--accent:#1b4332;--bg:#f4f6f5;--danger:#d62828;--strict:#8e44ad;--bridge:#d35400;--entrance:#27ae60;--stairs:#00bc8c;--official:#f39c12;--rotate:#2980b9}
   *{box-sizing:border-box}
   body{margin:0;height:100vh;display:flex;flex-direction:column;font:14px system-ui,sans-serif;color:var(--ink);background:var(--bg)}
   
@@ -17,6 +17,11 @@
   .sep{width:1px;height:24px;background:var(--line);margin:0 4px}
   input[type=number]{width:72px;padding:5px;border:1px solid var(--line);border-radius:6px;font:inherit}
   
+  /* Rotation Controls Group */
+  .rot-group {display:flex; align-items:center; gap:4px; background:#eaf2f8; padding:3px 8px; border-radius:6px; border:1px solid #a9cce3;}
+  .rot-group input[type=range] {width:90px; cursor:pointer;}
+  .rot-group span {font-weight:600; font-size:12px; color:#2471a3; min-width:32px; text-align:right;}
+
   /* Info / Help Status Bar */
   #help{padding:8px 12px;font-size:13px;color:#4a5a54;background:#fff;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;line-height:1.4;z-index:10}
   #graphStatus{font-weight:600;font-size:12px;padding:4px 10px;border-radius:6px;white-space:nowrap}
@@ -26,6 +31,7 @@
   /* Main Canvas Container */
   #wrap{flex:1;width:100%;height:100%;overflow:hidden;background:#202825;position:relative}
   svg{display:block;width:100%;height:100%;cursor:crosshair}
+  image{image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges}
   line { vector-effect: non-scaling-stroke; }
   text{font:600 12px system-ui,sans-serif;paint-order:stroke;stroke:#fff;stroke-width:3px;pointer-events:none}
   .edge-hover { stroke: #ff8800 !important; stroke-width: 8px !important; cursor: pointer; }
@@ -85,7 +91,18 @@
   <button data-m="off" style="color:var(--official);border-color:var(--official)">Official Route</button>
   <button data-m="mv">Move All</button>
   <button data-m="sc">Scale All</button>
+  <button data-m="rt" style="color:var(--rotate);border-color:var(--rotate)">Rotate All</button>
   <button data-m="del">Delete</button>
+  
+  <!-- Rotation Angle Slider & Controls Group -->
+  <div class="rot-group" title="Rotate all nodes around graph center">
+    <label style="font-size:12px;font-weight:600;color:#2471a3;">Rotate:</label>
+    <input type="range" id="rotateSlider" min="-180" max="180" value="0" step="0.5" oninput="onRotateSlider(this.value)">
+    <span id="rotateValue">0°</span>
+    <button onclick="applyRotation()" style="padding:2px 6px;font-size:11px;background:#2471a3;color:#fff;border:none;border-radius:4px;cursor:pointer;">Apply</button>
+    <button onclick="resetRotation()" style="padding:2px 6px;font-size:11px;background:#6c757d;color:#fff;border:none;border-radius:4px;cursor:pointer;">Reset</button>
+  </div>
+
   <span class="sep"></span>
   <button id="undo" title="Undo (Ctrl+Z)" disabled>↩ Undo</button>
   <button id="redo" title="Redo (Ctrl+Y)" disabled>↪ Redo</button>
@@ -110,7 +127,7 @@
 <div id="wrap">
   <svg id="svg">
     <g id="canvasGroup">
-      <image id="bg" href="campus-map.webp"/>
+      <image id="bg" href="campus-map-modified.png"/>
       <g id="edges"></g>
       <line id="rubberBand" stroke="#ff8800" stroke-width="4" stroke-dasharray="4" opacity="0"/>
       <g id="nodes"></g>
@@ -147,13 +164,15 @@ const helps = {
   off: 'Click existing path segments to toggle them as <b>Official Preferred Routes</b> (gold). Navigation will prefer these main thoroughfares.',
   mv: 'Click and drag anywhere on canvas to move ALL nodes & pathways together. Realigns layout after swapping map image.',
   sc: 'Click and drag inward or outward relative to graph center to scale ALL node coordinates uniformly.',
+  rt: '<b>Rotate Mode</b>: Click and drag circularly around the map center to rotate all nodes & paths, or use the top Rotate slider for precise angle adjustment!',
   del: 'Click any node to remove it and prune connected path edges, or click any blue path segment to delete that specific connection link.'
 };
 
 // Global State Variables
-let W = 1410, H = 840, imgName = 'campus-map.webp', mode = 'wp';
+let W = 1410, H = 840, imgName = 'campus-map-modified.png', mode = 'wp';
 let sel = null, linkFrom = null, nodes = {}, edgeMeta = {}, seq = 1, drag = null, moved = false;
 let groupDragStart = null, scaleDragStart = null, scaleOriginNodes = null;
+let rotateDragStart = null, rotateOriginNodes = null, currentRotationAngle = 0;
 let contextTargetId = null;
 const SNAP_DIST = 14; // Magnetic snap radius in pixels
 
@@ -176,7 +195,7 @@ function edgeKey(a, b) {
 
 // History: Pushes current graph snapshot into history stack
 function pushState() {
-  historyStack.push(JSON.stringify({ nodes, edgeMeta, seq }));
+  historyStack.push(JSON.stringify({ nodes, edgeMeta, seq, currentRotationAngle }));
   if (historyStack.length > MAX_HISTORY) historyStack.shift();
   redoStack = [];
   updateHistoryButtons();
@@ -191,11 +210,14 @@ function updateHistoryButtons() {
 // History: Reverts graph to previous state
 function undo() {
   if (historyStack.length === 0) return;
-  redoStack.push(JSON.stringify({ nodes, edgeMeta, seq }));
+  redoStack.push(JSON.stringify({ nodes, edgeMeta, seq, currentRotationAngle }));
   const state = JSON.parse(historyStack.pop());
   nodes = state.nodes;
   edgeMeta = state.edgeMeta || {};
   seq = state.seq;
+  currentRotationAngle = state.currentRotationAngle || 0;
+  $('rotateSlider').value = currentRotationAngle;
+  $('rotateValue').textContent = currentRotationAngle + '°';
   sel = null; linkFrom = null;
   draw(); updateRubberBand({ x: 0, y: 0 }, false); persist(false);
   updateHistoryButtons();
@@ -204,11 +226,14 @@ function undo() {
 // History: Re-applies undone state
 function redo() {
   if (redoStack.length === 0) return;
-  historyStack.push(JSON.stringify({ nodes, edgeMeta, seq }));
+  historyStack.push(JSON.stringify({ nodes, edgeMeta, seq, currentRotationAngle }));
   const state = JSON.parse(redoStack.pop());
   nodes = state.nodes;
   edgeMeta = state.edgeMeta || {};
   seq = state.seq;
+  currentRotationAngle = state.currentRotationAngle || 0;
+  $('rotateSlider').value = currentRotationAngle;
+  $('rotateValue').textContent = currentRotationAngle + '°';
   sel = null; linkFrom = null;
   draw(); updateRubberBand({ x: 0, y: 0 }, false); persist(false);
   updateHistoryButtons();
@@ -217,7 +242,7 @@ function redo() {
 // Pan/Zoom: Applies current pan offsets and zoom scale to SVG transform group
 function updateTransform() {
   canvasGroup.setAttribute('transform', `translate(${panX}, ${panY}) scale(${zoomScale})`);
-  draw(); // Re-render to update dynamic node/edge sizes
+  draw();
 }
 
 // Resets SVG canvas viewport bounds
@@ -441,13 +466,63 @@ function findDisconnectedNodes() {
   return nodeKeys.filter(id => !visited.has(id));
 }
 
-// Graph Math: Computes geometric centroid of all placed nodes
-function getGraphCenter() {
-  const keys = Object.keys(nodes);
-  if (keys.length === 0) return { x: W / 2, y: H / 2 };
+// --- ROTATION ENGINE FUNCTIONS ---
+
+function rotateNodesByAngle(angleDeg, baseNodesState = null) {
+  const source = baseNodesState || nodes;
+  const keys = Object.keys(source);
   let sumX = 0, sumY = 0;
-  keys.forEach(k => { sumX += nodes[k].x; sumY += nodes[k].y; });
-  return { x: sumX / keys.length, y: sumY / keys.length };
+  keys.forEach(k => { sumX += source[k].x; sumY += source[k].y; });
+  const center = {
+    x: keys.length > 0 ? sumX / keys.length : W / 2,
+    y: keys.length > 0 ? sumY / keys.length : H / 2
+  };
+
+  const rad = (angleDeg * Math.PI) / 180;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+
+  Object.keys(nodes).forEach(id => {
+    const orig = source[id];
+    if (!orig) return;
+    const dx = orig.x - center.x;
+    const dy = orig.y - center.y;
+    nodes[id].x = Math.round(center.x + (dx * cos - dy * sin));
+    nodes[id].y = Math.round(center.y + (dx * sin + dy * cos));
+  });
+}
+
+function onRotateSlider(val) {
+  const angle = parseFloat(val);
+  currentRotationAngle = angle;
+  $('rotateValue').textContent = angle + '°';
+
+  if (!rotateOriginNodes) {
+    rotateOriginNodes = JSON.parse(JSON.stringify(nodes));
+  }
+
+  rotateNodesByAngle(angle, rotateOriginNodes);
+  draw();
+}
+
+function applyRotation() {
+  pushState();
+  rotateOriginNodes = JSON.parse(JSON.stringify(nodes));
+  persist(false);
+  alert(`Rotation of ${currentRotationAngle}° applied successfully!`);
+}
+
+function resetRotation() {
+  pushState();
+  currentRotationAngle = 0;
+  $('rotateSlider').value = 0;
+  $('rotateValue').textContent = '0°';
+  if (rotateOriginNodes) {
+    nodes = JSON.parse(JSON.stringify(rotateOriginNodes));
+  }
+  rotateOriginNodes = null;
+  draw();
+  persist(false);
 }
 
 // Main Render Engine with Clamped Adaptive Zoom Scaling
@@ -466,13 +541,9 @@ function draw() {
     statusEl.className = 'ok'; statusEl.textContent = '✓ All Nodes Connected';
   }
 
-  // Calculate inverse zoom multiplier for rendering scale
   const rawInvScale = 1 / zoomScale;
-
-  // Clamping Helper: Bounds dynamic sizing between a minimum and maximum pixel size
   const clamp = (val, min, max) => Math.max(min, Math.min(max, val));
 
-  // Clamped Sizing Formulas for Edges & Nodes
   const stdLineWidth = clamp(5 * rawInvScale, 1.8, 10);
   const offLineWidth = clamp(8 * rawInvScale, 2.5, 14);
   const nodeRadiusSpec = clamp(7 * rawInvScale, 3.5, 12);
@@ -532,7 +603,6 @@ function draw() {
     c.setAttribute('stroke-width', nodeStrokeWidth);
     c.dataset.id = id; N.appendChild(c);
 
-    // Render Text Labels
     if (b || sp || isDisconnected || n.name) {
       const gText = document.createElementNS(NS, 'g');
       const textScale = clamp(rawInvScale, 0.4, 1.8);
@@ -572,13 +642,16 @@ function updateRubberBand(point, disableSnap = false) {
 // LocalStorage Persistence
 function persist(recordHistory = true) {
   if (recordHistory) pushState();
-  try { localStorage.setItem('campusEditor', JSON.stringify({ imgName, W, H, nodes, edgeMeta, seq, mpp: $('mpp').value, data:$('bg').getAttribute('href') })); } catch (e) {}
+  try { localStorage.setItem('campusEditor', JSON.stringify({ imgName, W, H, nodes, edgeMeta, seq, currentRotationAngle, mpp: $('mpp').value, data:$('bg').getAttribute('href') })); } catch (e) {}
 }
 function restore() {
   try {
     const s = JSON.parse(localStorage.getItem('campusEditor') || 'null'); if (!s) return;
     ({ imgName, W, H, nodes, seq } = s); 
     edgeMeta = s.edgeMeta || {};
+    currentRotationAngle = s.currentRotationAngle || 0;
+    $('rotateSlider').value = currentRotationAngle;
+    $('rotateValue').textContent = currentRotationAngle + '°';
     $('mpp').value = s.mpp; if (s.data)$('bg').setAttribute('href', s.data);
   } catch (e) {}
 }
@@ -599,7 +672,6 @@ function showContextMenu(x, y, node) {
   menu.style.display = 'block';
 }
 
-// Right-Click Context Menu Trigger
 svg.addEventListener('contextmenu', e => {
   e.preventDefault();
   const id = idOf(e);
@@ -716,6 +788,8 @@ svg.addEventListener('mousedown', e => {
     pushState(); groupDragStart = p; moved = false; e.preventDefault();
   } else if (mode === 'sc') {
     pushState(); scaleDragStart = p; scaleOriginNodes = JSON.parse(JSON.stringify(nodes)); moved = false; e.preventDefault();
+  } else if (mode === 'rt') {
+    pushState(); rotateDragStart = p; rotateOriginNodes = JSON.parse(JSON.stringify(nodes)); moved = false; e.preventDefault();
   } else if (id) {
     drag = id; moved = false; e.preventDefault();
   } 
@@ -741,10 +815,16 @@ addEventListener('mousemove', e => {
       groupDragStart = p; moved = true; draw();
     }
   } else if (mode === 'sc' && scaleDragStart && scaleOriginNodes) {
-    const center = getGraphCenter();
-    const initDist = Math.hypot(scaleDragStart.x - center.x, scaleDragStart.y - center.y) || 1;
+    const keys = Object.keys(scaleOriginNodes);
+    let sumX = 0, sumY = 0;
+    keys.forEach(k => { sumX += scaleOriginNodes[k].x; sumY += scaleOriginNodes[k].y; });
+    const center = {
+      x: keys.length > 0 ? sumX / keys.length : W / 2,
+      y: keys.length > 0 ? sumY / keys.length : H / 2
+    };
+    const initDist = Math.hypot(scaleDragStart.x - center.x, scaleDragStart.y - center.y);
     const currDist = Math.hypot(p.x - center.x, p.y - center.y);
-    const scaleFactor = currDist / initDist;
+    const scaleFactor = initDist > 10 ? (currDist / initDist) : (1 + (p.x - scaleDragStart.x) / 150);
 
     Object.keys(nodes).forEach(k => {
       const orig = scaleOriginNodes[k];
@@ -752,6 +832,22 @@ addEventListener('mousemove', e => {
       nodes[k].y = Math.round(center.y + (orig.y - center.y) * scaleFactor);
     });
 
+    moved = true; draw();
+  } else if (mode === 'rt' && rotateDragStart && rotateOriginNodes) {
+    const center = {
+      x: Object.values(rotateOriginNodes).reduce((acc, n) => acc + n.x, 0) / Object.keys(rotateOriginNodes).length || W/2,
+      y: Object.values(rotateOriginNodes).reduce((acc, n) => acc + n.y, 0) / Object.keys(rotateOriginNodes).length || H/2
+    };
+    const initAngle = Math.atan2(rotateDragStart.y - center.y, rotateDragStart.x - center.x);
+    const currAngle = Math.atan2(p.y - center.y, p.x - center.x);
+    let deltaAngleDeg = ((currAngle - initAngle) * 180) / Math.PI;
+
+    currentRotationAngle = Math.round((currentRotationAngle + deltaAngleDeg) * 10) / 10;
+    $('rotateSlider').value = currentRotationAngle;
+    $('rotateValue').textContent = currentRotationAngle + '°';
+
+    rotateNodesByAngle(currentRotationAngle, rotateOriginNodes);
+    rotateDragStart = p;
     moved = true; draw();
   } else if (drag) {
     const snap = findSnapLocation(p, drag, disableSnap);
@@ -772,6 +868,8 @@ addEventListener('mouseup', () => {
     if (moved) persist(false); groupDragStart = null;
   } else if (mode === 'sc' && scaleDragStart) {
     if (moved) persist(false); scaleDragStart = null; scaleOriginNodes = null;
+  } else if (mode === 'rt' && rotateDragStart) {
+    if (moved) persist(false); rotateDragStart = null; rotateOriginNodes = null;
   } else if (drag && moved) {
     persist();
   }
@@ -788,7 +886,7 @@ svg.addEventListener('click', e => {
   const edgeA = e.target.dataset && e.target.dataset.edgeA;
   const edgeB = e.target.dataset && e.target.dataset.edgeB;
 
-  if (mode === 'mv' || mode === 'sc') return;
+  if (mode === 'mv' || mode === 'sc' || mode === 'rt') return;
 
   pushState();
 
@@ -889,7 +987,7 @@ addEventListener('keydown', e => {
     isSpacePressed = true;
     svg.style.cursor = 'grab';
   } else if (e.key === 'Escape') {
-    sel = null; linkFrom = null; groupDragStart = null; scaleDragStart = null;
+    sel = null; linkFrom = null; groupDragStart = null; scaleDragStart = null; rotateDragStart = null;
     hideContextMenu();
     updateRubberBand({ x: 0, y: 0 }, false);
     draw();
@@ -915,7 +1013,7 @@ $('undo').onclick = undo;
 $('redo').onclick = redo;
 
 document.querySelectorAll('[data-m]').forEach(b => b.onclick = () => {
-  mode = b.dataset.m; linkFrom = null; groupDragStart = null; scaleDragStart = null;
+  mode = b.dataset.m; linkFrom = null; groupDragStart = null; scaleDragStart = null; rotateDragStart = null;
   document.querySelectorAll('[data-m]').forEach(x => x.classList.toggle('on', x === b));
   $('helpText').innerHTML = helps[mode]; draw();
 });
@@ -947,7 +1045,23 @@ $('img').onchange = e => {
   const r = new FileReader();
   r.onload = () => {
     const im = new Image();
-    im.onload = () => { W = im.naturalWidth; H = im.naturalHeight; imgName = f.name; $('bg').setAttribute('href', r.result); fit(); persist(false); };
+    im.onload = () => {
+      const oldW = W, oldH = H;
+      W = im.naturalWidth; H = im.naturalHeight; imgName = f.name;
+      $('bg').setAttribute('href', r.result);
+      
+      if (Object.keys(nodes).length > 0 && (oldW !== W || oldH !== H)) {
+        if (confirm(`New image dimensions (${W}x${H}) differ from previous (${oldW}x${oldH}). Do you want to automatically scale existing nodes and pathways to fit the new map proportions?`)) {
+          const scaleX = W / oldW;
+          const scaleY = H / oldH;
+          Object.values(nodes).forEach(n => {
+            n.x = Math.round(n.x * scaleX);
+            n.y = Math.round(n.y * scaleY);
+          });
+        }
+      }
+      fit(); persist(false);
+    };
     im.src = r.result;
   };
   r.readAsDataURL(f);

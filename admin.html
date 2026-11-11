@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin - Feedback Dashboard</title>
 <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; }
   body {
@@ -12,8 +16,10 @@
     font-family: 'Inter', Arial, sans-serif;
     background: #f4f6f5;
     color: #1b1b1b;
+    -webkit-font-smoothing: antialiased;
   }
 
+  /* Header */
   header {
     background: #1b4332;
     color: white;
@@ -21,6 +27,9 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    position: relative;
+    z-index: 10;
   }
   header h1 {
     font-size: 18px;
@@ -28,154 +37,294 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    font-weight: 600;
   }
   #logoutBtn {
     background: rgba(255,255,255,0.15);
     color: white;
     border: none;
-    padding: 8px 14px;
+    padding: 8px 16px;
     border-radius: 6px;
     cursor: pointer;
     font-size: 13px;
     display: none;
     align-items: center;
     gap: 6px;
+    font-weight: 500;
+    transition: background 0.2s;
   }
   #logoutBtn:hover { background: rgba(255,255,255,0.25); }
 
-  /* Login screen */
-  #loginScreen {
-    max-width: 360px;
-    margin: 90px auto;
-    background: white;
-    padding: 32px;
-    border-radius: 14px;
-    box-shadow: 0 6px 24px rgba(0,0,0,0.08);
-  }
-  #loginScreen h2 {
-    margin-top: 0;
-    color: #1b4332;
-    font-size: 20px;
+  /* Login Screen (Full page center) */
+  #loginWrapper {
+    min-height: calc(100vh - 60px);
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #f4f6f5 0%, #e9eceb 100%);
+  }
+  #loginScreen {
+    width: 100%;
+    max-width: 400px;
+    background: white;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    position: relative;
+  }
+  .login-icon-top {
+    width: 60px;
+    height: 60px;
+    background: rgba(27, 67, 50, 0.1);
+    color: #1b4332;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    margin: 0 auto 16px;
+  }
+  #loginScreen h2 {
+    margin: 0 0 24px;
+    color: #1b4332;
+    font-size: 22px;
+    text-align: center;
+    font-weight: 700;
+  }
+  .input-group {
+    margin-bottom: 18px;
   }
   #loginScreen label {
     display: block;
     font-size: 13px;
     font-weight: 600;
-    color: #555;
-    margin-bottom: 4px;
-    margin-top: 14px;
+    color: #444;
+    margin-bottom: 6px;
   }
   #loginScreen input {
     width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #ccc;
+    padding: 12px 14px;
+    border: 1.5px solid #ddd;
     border-radius: 8px;
     font-size: 14px;
+    font-family: inherit;
+    transition: all 0.2s;
+    background: #fafafa;
+  }
+  #loginScreen input:focus {
+    outline: none;
+    border-color: #1b4332;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(27, 67, 50, 0.1);
   }
   #loginBtn {
     width: 100%;
-    margin-top: 20px;
+    margin-top: 8px;
     background: #1b4332;
     color: white;
     border: none;
-    padding: 11px;
+    padding: 12px;
     border-radius: 8px;
     font-weight: 600;
+    font-size: 15px;
     cursor: pointer;
-    font-size: 14px;
+    transition: background 0.2s, transform 0.1s;
   }
   #loginBtn:hover { background: #2d6a4f; }
-  #loginError {
-    color: #b3261e;
+  #loginBtn:active { transform: scale(0.98); }
+  
+  .back-home-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: 16px;
+    background: transparent;
+    color: #666;
+    border: none;
     font-size: 13px;
-    margin-top: 10px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .back-home-btn:hover { color: #1b4332; }
+
+  #loginError {
+    background: #fdeded;
+    color: #b3261e;
+    border: 1px solid #f5c6c6;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-top: 16px;
     display: none;
+    text-align: center;
+  }
+  
+  .security-note {
+    margin-top: 24px;
+    text-align: center;
+    font-size: 11px;
+    color: #888;
+    line-height: 1.4;
   }
 
   /* Dashboard */
-  #dashboard { display: none; padding: 24px; }
+  #dashboard { display: none; padding: 30px; max-width: 1400px; margin: 0 auto; }
+  
   .dash-topbar {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
+    align-items: flex-end;
+    margin-bottom: 24px;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 16px;
   }
-  .dash-topbar h2 {
+  .dash-title h2 {
+    margin: 0 0 4px;
+    font-size: 22px;
+    color: #1b4332;
+    font-weight: 700;
+  }
+  .dash-title p {
     margin: 0;
-    font-size: 16px;
-    color: #1b4332;
+    font-size: 14px;
+    color: #666;
   }
+  
+  .dash-actions {
+    display: flex;
+    gap: 12px;
+  }
+  
   #refreshBtn {
-    background: #eef4f0;
+    background: white;
     color: #1b4332;
-    border: none;
-    padding: 8px 14px;
-    border-radius: 6px;
+    border: 1px solid #dcebe2;
+    padding: 10px 16px;
+    border-radius: 8px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 14px;
+    font-weight: 500;
     display: flex;
     align-items: center;
     gap: 6px;
+    transition: all 0.2s;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
   }
-  #refreshBtn:hover { background: #dcebe2; }
+  #refreshBtn:hover { background: #f4fbf7; border-color: #1b4332; }
 
+  /* Stats Card */
+  .stat-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: white;
+    padding: 12px 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    margin-bottom: 24px;
+    border-left: 4px solid #1b4332;
+  }
+  .stat-card i { font-size: 24px; color: #1b4332; background: #eef4f0; padding: 8px; border-radius: 8px; }
+  .stat-info span { display: block; font-size: 12px; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-info strong { display: block; font-size: 20px; color: #1b4332; line-height: 1.2; }
+
+  /* Table */
+  .table-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    overflow-x: auto;
+    width: 100%;
+  }
+  
   table {
     width: 100%;
     border-collapse: collapse;
-    background: white;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    min-width: 800px;
   }
   thead {
-    background: #1b4332;
-    color: white;
+    background: #f8faf9;
+    border-bottom: 2px solid #eee;
   }
-  th, td {
-    padding: 10px 12px;
+  th {
+    padding: 16px;
     text-align: left;
-    font-size: 13px;
-    vertical-align: top;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #666;
+    font-weight: 700;
   }
-  tbody tr { border-bottom: 1px solid #eee; }
+  td {
+    padding: 16px;
+    font-size: 14px;
+    vertical-align: top;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  tbody tr { transition: background 0.2s; }
   tbody tr:hover { background: #f9fbfa; }
-  td.message-cell { max-width: 320px; white-space: pre-wrap; }
-  td.date-cell { white-space: nowrap; color: #666; }
+  tbody tr:last-child td { border-bottom: none; }
+  
   .subject-badge {
     display: inline-block;
     background: #eef4f0;
     color: #1b4332;
-    padding: 3px 8px;
-    border-radius: 12px;
-    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
     font-weight: 600;
   }
+  
+  .message-cell { 
+    max-width: 350px; 
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    color: #444;
+  }
+  
+  .date-cell { 
+    white-space: nowrap; 
+    color: #666; 
+    font-size: 13px;
+  }
+  
   .delete-btn {
-    background: #b3261e;
-    color: white;
+    background: #fdeded;
+    color: #d32f2f;
     border: none;
-    padding: 6px 10px;
+    padding: 8px 12px;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 500;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
     white-space: nowrap;
+    transition: all 0.2s;
   }
-  .delete-btn:hover { background: #8f1e18; }
+  .delete-btn:hover { background: #fcd0d0; color: #b3261e; }
 
+  /* States */
   #emptyState, #loadingState {
     text-align: center;
-    padding: 40px;
+    padding: 60px 20px;
     color: #888;
     background: white;
-    border-radius: 10px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  }
+  #emptyState i, #loadingState i {
+    font-size: 40px;
+    color: #ccc;
+    margin-bottom: 16px;
+    display: block;
   }
 </style>
 </head>
@@ -187,39 +336,82 @@
 </header>
 
 <!-- LOGIN SCREEN -->
-<div id="loginScreen">
-  <h2><i class='bx bx-lock-alt'></i> Admin Login</h2>
-  <label for="loginEmail">Email</label>
-  <input type="email" id="loginEmail" placeholder="admin@example.com" />
-  <label for="loginPassword">Password</label>
-  <input type="password" id="loginPassword" placeholder="••••••••" />
-  <button id="loginBtn" onclick="login()">Log In</button>
-  <div id="loginError">Invalid email or password.</div>
+<div id="loginWrapper">
+  <div id="loginScreen">
+    <div class="login-icon-top">
+      <i class='bx bx-lock-alt'></i>
+    </div>
+    <h2>Admin Login</h2>
+    
+    <div class="input-group">
+      <label for="loginEmail">Email Address</label>
+      <input type="email" id="loginEmail" placeholder="admin@example.com" />
+    </div>
+    
+    <div class="input-group">
+      <label for="loginPassword">Password</label>
+      <input type="password" id="loginPassword" placeholder="••••••••" />
+    </div>
+    
+    <button id="loginBtn" onclick="login()">Log In</button>
+    <div id="loginError">Invalid email or password. Please try again.</div>
+    
+    <!-- Back to Home Button -->
+    <a href="index.html" class="back-home-btn">
+      <i class='bx bx-arrow-back'></i> Back to Home
+    </a>
+
+    <p class="security-note">
+      <i class='bx bx-info-circle'></i> Admin accounts can only be created manually in the Firebase Console.
+    </p>
+  </div>
 </div>
 
 <!-- DASHBOARD -->
 <div id="dashboard">
   <div class="dash-topbar">
-    <h2><i class='bx bx-message-detail'></i> Submitted Feedback (newest first)</h2>
-    <button id="refreshBtn" onclick="loadFeedback()"><i class='bx bx-refresh'></i> Refresh</button>
+    <div class="dash-title">
+      <h2>Feedback Inbox</h2>
+      <p>Manage and review messages sent from the Contact page.</p>
+    </div>
+    <div class="dash-actions">
+      <button id="refreshBtn" onclick="loadFeedback()"><i class='bx bx-refresh'></i> Refresh</button>
+    </div>
+  </div>
+  
+  <div class="stat-card" id="statCard" style="display: none;">
+    <i class='bx bx-envelope'></i>
+    <div class="stat-info">
+      <span>Total Messages</span>
+      <strong id="totalMessages">0</strong>
+    </div>
   </div>
 
-  <div id="loadingState" style="display:none;">Loading feedback...</div>
-  <div id="emptyState" style="display:none;">No feedback submitted yet.</div>
+  <div id="loadingState">
+    <i class='bx bx-loader-alt bx-spin'></i>
+    Loading feedback...
+  </div>
+  
+  <div id="emptyState" style="display:none;">
+    <i class='bx bx-inbox'></i>
+    No feedback submitted yet.
+  </div>
 
-  <table id="feedbackTable" style="display:none;">
-    <thead>
-      <tr>
-        <th>Date</th>
-        <th>Name</th>
-        <th>Email</th>
-        <th>Subject</th>
-        <th>Message</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody id="feedbackTableBody"></tbody>
-  </table>
+  <div class="table-container" id="tableContainer" style="display:none;">
+    <table id="feedbackTable">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Subject</th>
+          <th>Message</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="feedbackTableBody"></tbody>
+    </table>
+  </div>
 </div>
 
 <script type="module">
@@ -244,7 +436,7 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  const loginScreen = document.getElementById('loginScreen');
+  const loginWrapper = document.getElementById('loginWrapper');
   const dashboard = document.getElementById('dashboard');
   const logoutBtn = document.getElementById('logoutBtn');
   const loginError = document.getElementById('loginError');
@@ -252,12 +444,12 @@
   // ---- AUTH STATE ----
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      loginScreen.style.display = 'none';
+      loginWrapper.style.display = 'none';
       dashboard.style.display = 'block';
       logoutBtn.style.display = 'flex';
       loadFeedback();
     } else {
-      loginScreen.style.display = 'block';
+      loginWrapper.style.display = 'flex';
       dashboard.style.display = 'none';
       logoutBtn.style.display = 'none';
     }
@@ -266,12 +458,23 @@
   window.login = async function () {
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
+    const btn = document.getElementById('loginBtn');
+    
+    if(!email || !password) return;
+
     loginError.style.display = 'none';
+    btn.innerHTML = "Logging in...";
+    btn.style.opacity = "0.8";
+    
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      btn.innerHTML = "Log In";
+      btn.style.opacity = "1";
     } catch (err) {
       console.error(err);
       loginError.style.display = 'block';
+      btn.innerHTML = "Log In";
+      btn.style.opacity = "1";
     }
   };
 
@@ -279,20 +482,24 @@
     signOut(auth);
   };
 
-  // allow pressing Enter in the password field to log in
+  // Allow pressing Enter in the password field to log in
   document.getElementById('loginPassword').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') window.login();
   });
 
   // ---- LOAD FEEDBACK ----
   window.loadFeedback = async function () {
-    const tableEl = document.getElementById('feedbackTable');
+    const tableContainer = document.getElementById('tableContainer');
     const bodyEl = document.getElementById('feedbackTableBody');
     const loadingEl = document.getElementById('loadingState');
     const emptyEl = document.getElementById('emptyState');
+    const statCard = document.getElementById('statCard');
+    const totalEl = document.getElementById('totalMessages');
 
-    tableEl.style.display = 'none';
+    // Reset UI
+    tableContainer.style.display = 'none';
     emptyEl.style.display = 'none';
+    statCard.style.display = 'none';
     loadingEl.style.display = 'block';
     bodyEl.innerHTML = '';
 
@@ -307,27 +514,35 @@
         return;
       }
 
+      // Update Stats
+      totalEl.textContent = snapshot.size;
+      statCard.style.display = 'inline-flex';
+
       snapshot.forEach((docSnap) => {
         const data = docSnap.data();
         const row = document.createElement('tr');
 
         const dateStr = data.createdAt?.toDate
-          ? data.createdAt.toDate().toLocaleString()
+          ? data.createdAt.toDate().toLocaleString(undefined, { 
+              year: 'numeric', month: 'short', day: 'numeric', 
+              hour: '2-digit', minute: '2-digit' 
+            })
           : (data.timestamp || '');
 
         row.innerHTML = `
           <td class="date-cell">${dateStr}</td>
-          <td>${escapeHtml(data.name || '')}</td>
+          <td><strong>${escapeHtml(data.name || '')}</strong></td>
           <td>${escapeHtml(data.email || '')}</td>
           <td><span class="subject-badge">${escapeHtml(data.subject || '')}</span></td>
-          <td class="message-cell">${escapeHtml(data.message || '')}</td>
+          <td class="message-cell" title="${escapeHtml(data.message || '')}">${escapeHtml(data.message || '')}</td>
           <td><button class="delete-btn" data-id="${docSnap.id}"><i class='bx bx-trash'></i> Delete</button></td>
         `;
         bodyEl.appendChild(row);
       });
 
-      tableEl.style.display = 'table';
+      tableContainer.style.display = 'block';
 
+      // Attach delete listeners
       bodyEl.querySelectorAll('.delete-btn').forEach((btn) => {
         btn.addEventListener('click', () => deleteFeedback(btn.dataset.id));
       });
@@ -335,13 +550,13 @@
     } catch (err) {
       console.error(err);
       loadingEl.style.display = 'none';
-      emptyEl.textContent = 'Could not load feedback. Check the console for details.';
+      emptyEl.innerHTML = "<i class='bx bx-error-circle' style='color:#d32f2f'></i>Could not load feedback. Check the console for details.";
       emptyEl.style.display = 'block';
     }
   };
 
   async function deleteFeedback(id) {
-    if (!confirm('Delete this feedback entry? This cannot be undone.')) return;
+    if (!confirm('Are you sure you want to delete this feedback? This cannot be undone.')) return;
     try {
       await deleteDoc(doc(db, 'feedback', id));
       loadFeedback();
@@ -351,6 +566,7 @@
     }
   }
 
+  // Helper to prevent XSS attacks from malicious form inputs
   function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
