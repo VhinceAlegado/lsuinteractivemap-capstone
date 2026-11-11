@@ -1255,7 +1255,7 @@ const buildings = [
     name: "BVM Building",
     keywords: ["BVM", "office", "administration"],
     page: "Buildings/BVM/bvmbuilding.html",
-    image: "Buildings/BVM/20251106_151243.jpg"
+    image: "Buildings/BVM/isbuilding-panorama.jpg"
   },
   {
     name: "SJ Building",
@@ -1267,7 +1267,7 @@ const buildings = [
     name: "LS Building",
     keywords: ["building", "office", "administration"],
     page: "Buildings/LS Building/lsbuilding.html",
-    image: "admin.jpg"
+    image: "Buildings/LS Building/Screenshot 2025-11-10 144355.png"
   },
   {
     name: "Art Center",
@@ -1291,7 +1291,7 @@ const buildings = [
     name: "SB Building",
     keywords: ["SB", "ground", "basketball"],
     page: "Buildings/SB building/sbbuilding.html",
-    image: "Buildings/SB building/Screenshot 2025-11-11 140832.png"
+    image: "Buildings/SB building/Screenshot 2025-11-11 140832.webp"
   },
   {
     name: "Star Chapel",
@@ -1304,7 +1304,7 @@ const buildings = [
     name: "SC Building",
     keywords: ["SC", "building", "religious"],
     page: "Buildings/SC/scbuilding.html",
-    image: "Photos/scground.png"
+    image: "Buildings/SC/20251002_160309.jpg"
   },
   {
     name: "Lasallian Mission Unit (LMU)",
@@ -1491,7 +1491,13 @@ function showMapView(view) {
 let MAP_W = 1410, MAP_H = 840, MAP_IMAGE = "campus-map.png", METERS_PER_PIXEL = 0.35;
 const GRAPH_FILE = "campus-graph.json";
 
-const toLL = (x, y) => [MAP_H - y, x];
+const toLL = (x, y) => {
+  const swLat = 8.146679, swLng = 123.842943;
+  const neLat = 8.153333, neLng = 123.848912;
+  const lat = swLat + (y / MAP_H) * (neLat - swLat);
+  const lng = swLng + (x / MAP_W) * (neLng - swLng);
+  return [lat, lng];
+};
 const navNodes = {};
 
 function sampleGraph() {
@@ -1589,15 +1595,18 @@ async function initLeafletNav() {
   await loadGraph();
   const bounds = [[0, 0], [MAP_H, MAP_W]];
 
+  const southWest = L.latLng(8.146679, 123.842943);
+  const northEast = L.latLng(8.153333, 123.848912);
+  const campusBounds = L.latLngBounds(southWest, northEast);
+
   leafletMap = L.map('leafletMap', {
-    crs: L.CRS.Simple,
-    maxBounds: bounds,
+    maxBounds: campusBounds,
     maxBoundsViscosity: 1.0,
     attributionControl: false
   });
 
-  imgOverlay = L.imageOverlay(MAP_IMAGE, bounds)
-    .on('error', () => console.error('Map image not found: ' + MAP_IMAGE))
+  imgOverlay = L.imageOverlay("campus-map-modified.png", campusBounds)
+    .on('error', () => console.error('Map image not found: campus-map-modified.png'))
     .addTo(leafletMap);
 
   imgOverlay.once('load', () => {

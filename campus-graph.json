@@ -45,13 +45,17 @@
       "connects_to": [
         "wp_95",
         "wp_96",
-        "wp_211",
         "wp_89",
         "wp_90",
         "wp_91",
         "wp_92",
         "wp_93",
-        "wp_94"
+        "wp_94",
+        "wp_244",
+        "wp_243",
+        "wp_97",
+        "wp_113",
+        "wp_245"
       ]
     },
     "b_10": {
@@ -113,24 +117,24 @@
       ]
     },
     "wp_20": {
-      "x": 638,
-      "y": 279,
+      "x": 633,
+      "y": 284,
       "type": "waypoint",
       "name": null,
       "connects_to": [
         "wp_18",
+        "wp_112",
         "wp_21"
       ]
     },
     "wp_21": {
-      "x": 634,
-      "y": 268,
+      "x": 629,
+      "y": 270,
       "type": "waypoint",
       "name": null,
       "connects_to": [
-        "wp_20",
-        "wp_112",
-        "wp_197"
+        "wp_47",
+        "wp_20"
       ]
     },
     "wp_22": {
@@ -141,31 +145,31 @@
       "connects_to": [
         "wp_23",
         "wp_27",
-        "wp_29",
         "wp_197",
-        "wp_200"
+        "wp_200",
+        "wp_241"
       ]
     },
     "wp_23": {
-      "x": 641,
-      "y": 227,
+      "x": 637,
+      "y": 220,
       "type": "waypoint",
       "name": null,
       "connects_to": [
         "wp_22",
-        "wp_24"
+        "wp_242"
       ]
     },
     "wp_24": {
-      "x": 641,
-      "y": 191,
+      "x": 640,
+      "y": 190,
       "type": "waypoint",
       "name": null,
       "connects_to": [
-        "wp_23",
         "wp_27",
         "wp_171",
-        "wp_190"
+        "wp_190",
+        "wp_242"
       ]
     },
     "wp_25": {
@@ -219,7 +223,7 @@
       "connects_to": [
         "wp_28",
         "wp_30",
-        "wp_22"
+        "wp_241"
       ]
     },
     "wp_30": {
@@ -291,8 +295,8 @@
       ]
     },
     "wp_40": {
-      "x": 424,
-      "y": 315,
+      "x": 437,
+      "y": 303,
       "type": "waypoint",
       "name": null,
       "connects_to": [
@@ -301,8 +305,8 @@
       ]
     },
     "wp_41": {
-      "x": 368,
-      "y": 355,
+      "x": 365,
+      "y": 351,
       "type": "waypoint",
       "name": null,
       "connects_to": [
@@ -358,18 +362,19 @@
       ]
     },
     "wp_47": {
-      "x": 603,
-      "y": 255,
+      "x": 626,
+      "y": 259,
       "type": "waypoint",
       "name": null,
       "connects_to": [
+        "wp_198",
         "wp_197",
-        "wp_198"
+        "wp_21"
       ]
     },
     "wp_48": {
-      "x": 486,
-      "y": 303,
+      "x": 496,
+      "y": 307,
       "type": "waypoint",
       "name": null,
       "connects_to": [
@@ -391,8 +396,8 @@
       ]
     },
     "wp_50": {
-      "x": 476,
-      "y": 328,
+      "x": 481,
+      "y": 330,
       "type": "waypoint",
       "name": null,
       "connects_to": [
@@ -413,8 +418,8 @@
       ]
     },
     "wp_52": {
-      "x": 422,
-      "y": 382,
+      "x": 443,
+      "y": 387,
       "type": "waypoint",
       "name": null,
       "connects_to": [
@@ -607,16 +612,18 @@
       ]
     },
     "wp_72": {
-      "x": 1127,
-      "y": 230,
-      "type": "waypoint",
-      "name": null,
+      "x": 1122,
+      "y": 229,
+      "type": "building",
+      "name": "LSU-IS Registrar",
       "connects_to": [
         "wp_71",
         "wp_73",
         "wp_136",
         "wp_135"
-      ]
+      ],
+      "is_strict": false,
+      "strict_type": null
     },
     "wp_73": {
       "x": 1141,
@@ -756,9 +763,9 @@
       "name": null,
       "connects_to": [
         "wp_46",
-        "wp_90",
         "b_9",
-        "wp_113"
+        "wp_113",
+        "wp_243"
       ]
     },
     "wp_90": {
@@ -767,9 +774,9 @@
       "type": "waypoint",
       "name": null,
       "connects_to": [
-        "wp_89",
         "wp_91",
-        "b_9"
+        "b_9",
+        "wp_245"
       ]
     },
     "wp_91": {
@@ -836,8 +843,7 @@
       "connects_to": [
         "wp_95",
         "wp_97",
-        "b_9",
-        "wp_211"
+        "b_9"
       ]
     },
     "wp_97": {
@@ -849,7 +855,7 @@
         "wp_96",
         "wp_113",
         "wp_114",
-        "wp_211"
+        "b_9"
       ]
     },
     "b_99": {
@@ -938,14 +944,14 @@
       ]
     },
     "wp_112": {
-      "x": 644,
-      "y": 312,
+      "x": 642,
+      "y": 313,
       "type": "waypoint",
       "name": null,
       "connects_to": [
         "wp_104",
-        "wp_21",
-        "b_107"
+        "b_107",
+        "wp_20"
       ]
     },
     "wp_113": {
@@ -956,8 +962,8 @@
       "connects_to": [
         "wp_97",
         "wp_114",
-        "wp_211",
-        "wp_89"
+        "wp_89",
+        "b_9"
       ]
     },
     "wp_114": {
@@ -1155,7 +1161,7 @@
       ]
     },
     "wp_139": {
-      "x": 1116,
+      "x": 1106,
       "y": 298,
       "type": "waypoint",
       "name": null,
@@ -1189,14 +1195,14 @@
       ]
     },
     "wp_142": {
-      "x": 471,
-      "y": 289,
+      "x": 464,
+      "y": 291,
       "type": "waypoint",
       "name": null,
       "connects_to": [
         "wp_40",
-        "wp_143",
-        "wp_200"
+        "wp_200",
+        "b_247"
       ]
     },
     "wp_143": {
@@ -1205,7 +1211,7 @@
       "type": "waypoint",
       "name": null,
       "connects_to": [
-        "wp_142"
+        "b_247"
       ]
     },
     "wp_144": {
@@ -1355,7 +1361,7 @@
       "strict_type": "gate"
     },
     "wp_165": {
-      "x": 593,
+      "x": 591,
       "y": 130,
       "type": "waypoint",
       "name": null,
@@ -1394,8 +1400,8 @@
       ]
     },
     "b_170": {
-      "x": 599,
-      "y": 159,
+      "x": 596,
+      "y": 147,
       "type": "building",
       "name": "LS Building",
       "connects_to": [
@@ -1405,8 +1411,8 @@
       ]
     },
     "wp_171": {
-      "x": 631,
-      "y": 151,
+      "x": 628,
+      "y": 141,
       "type": "waypoint",
       "name": null,
       "connects_to": [
@@ -1647,21 +1653,20 @@
       "strict_type": "crossing",
       "connects_to": [
         "wp_22",
-        "wp_47",
-        "wp_21"
+        "wp_47"
       ]
     },
     "wp_198": {
-      "x": 602,
-      "y": 267,
+      "x": 603,
+      "y": 266,
       "type": "waypoint",
       "name": null,
       "is_strict": false,
       "strict_type": null,
       "connects_to": [
         "wp_47",
-        "wp_207",
-        "wp_104"
+        "wp_104",
+        "wp_246"
       ]
     },
     "b_199": {
@@ -1734,8 +1739,8 @@
       "connects_to": [
         "b_206",
         "b_3",
-        "wp_207",
-        "wp_240"
+        "wp_240",
+        "wp_246"
       ]
     },
     "b_206": {
@@ -1752,16 +1757,15 @@
       ]
     },
     "wp_207": {
-      "x": 517,
-      "y": 291,
+      "x": 515,
+      "y": 287,
       "type": "waypoint",
       "name": null,
       "is_strict": false,
       "strict_type": null,
       "connects_to": [
-        "wp_198",
         "wp_48",
-        "b_205"
+        "wp_246"
       ]
     },
     "wp_208": {
@@ -1799,20 +1803,6 @@
       "strict_type": null,
       "connects_to": [
         "b_100"
-      ]
-    },
-    "wp_211": {
-      "x": 419,
-      "y": 537,
-      "type": "waypoint",
-      "name": null,
-      "is_strict": false,
-      "strict_type": null,
-      "connects_to": [
-        "b_9",
-        "wp_97",
-        "wp_96",
-        "wp_113"
       ]
     },
     "wp_212": {
@@ -1927,8 +1917,8 @@
       ]
     },
     "wp_224": {
-      "x": 1116,
-      "y": 317,
+      "x": 1106,
+      "y": 318,
       "type": "waypoint",
       "name": null,
       "is_strict": false,
@@ -2080,7 +2070,7 @@
       ]
     },
     "b_236": {
-      "x": 360,
+      "x": 356,
       "y": 357,
       "type": "building",
       "name": "CCSEA Office",
@@ -2127,6 +2117,94 @@
         "wp_55",
         "b_205"
       ]
+    },
+    "wp_241": {
+      "x": 706,
+      "y": 225,
+      "type": "waypoint",
+      "name": null,
+      "is_strict": false,
+      "strict_type": null,
+      "connects_to": [
+        "wp_22",
+        "wp_29"
+      ]
+    },
+    "wp_242": {
+      "x": 647,
+      "y": 204,
+      "type": "waypoint",
+      "name": null,
+      "is_strict": false,
+      "strict_type": null,
+      "connects_to": [
+        "wp_24",
+        "wp_23"
+      ]
+    },
+    "wp_243": {
+      "x": 403,
+      "y": 601,
+      "type": "waypoint",
+      "name": null,
+      "is_strict": false,
+      "strict_type": null,
+      "connects_to": [
+        "wp_89",
+        "wp_244",
+        "b_9"
+      ]
+    },
+    "wp_244": {
+      "x": 428,
+      "y": 630,
+      "type": "waypoint",
+      "name": null,
+      "is_strict": false,
+      "strict_type": null,
+      "connects_to": [
+        "wp_243",
+        "wp_245",
+        "b_9"
+      ]
+    },
+    "wp_245": {
+      "x": 451,
+      "y": 659,
+      "type": "waypoint",
+      "name": null,
+      "is_strict": false,
+      "strict_type": null,
+      "connects_to": [
+        "wp_90",
+        "wp_244",
+        "b_9"
+      ]
+    },
+    "wp_246": {
+      "x": 538,
+      "y": 282,
+      "type": "waypoint",
+      "name": null,
+      "is_strict": false,
+      "strict_type": null,
+      "connects_to": [
+        "wp_207",
+        "b_205",
+        "wp_198"
+      ]
+    },
+    "b_247": {
+      "x": 459,
+      "y": 280,
+      "type": "building",
+      "name": "University Clinic",
+      "is_strict": false,
+      "strict_type": null,
+      "connects_to": [
+        "wp_143",
+        "wp_142"
+      ]
     }
   },
   "edgeMeta": {
@@ -2142,13 +2220,7 @@
     "wp_28--wp_29": {
       "is_official": true
     },
-    "wp_22--wp_29": {
-      "is_official": true
-    },
     "wp_22--wp_27": {
-      "is_official": true
-    },
-    "wp_23--wp_24": {
       "is_official": true
     },
     "wp_22--wp_23": {
@@ -2454,19 +2526,10 @@
     "wp_104--wp_112": {
       "is_official": true
     },
-    "wp_112--wp_21": {
-      "is_official": true
-    },
     "wp_104--wp_198": {
       "is_official": true
     },
     "wp_198--wp_47": {
-      "is_official": true
-    },
-    "wp_197--wp_47": {
-      "is_official": true
-    },
-    "wp_197--wp_21": {
       "is_official": true
     },
     "wp_197--wp_22": {
@@ -2500,6 +2563,60 @@
       "is_official": true
     },
     "b_10--wp_46": {
+      "is_official": true
+    },
+    "wp_22--wp_241": {
+      "is_official": true
+    },
+    "wp_241--wp_29": {
+      "is_official": true
+    },
+    "wp_23--wp_242": {
+      "is_official": true
+    },
+    "wp_24--wp_242": {
+      "is_official": true
+    },
+    "b_170--wp_171": {
+      "is_official": true
+    },
+    "wp_139--wp_224": {
+      "is_official": true
+    },
+    "wp_224--wp_58": {
+      "is_official": true
+    },
+    "wp_139--wp_75": {
+      "is_official": true
+    },
+    "wp_135--wp_75": {
+      "is_official": true
+    },
+    "wp_234--wp_83": {
+      "is_official": true
+    },
+    "b_82--wp_59": {
+      "is_official": true
+    },
+    "b_82--wp_235": {
+      "is_official": true
+    },
+    "b_82--wp_234": {
+      "is_official": true
+    },
+    "wp_235--wp_84": {
+      "is_official": true
+    },
+    "wp_83--wp_86": {
+      "is_official": true
+    },
+    "wp_84--wp_85": {
+      "is_official": true
+    },
+    "b_247--wp_142": {
+      "is_official": true
+    },
+    "b_247--wp_143": {
       "is_official": true
     }
   }
