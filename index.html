@@ -1,321 +1,2073 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>La Salle University - Interactive Campus</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>La Salle University – Interactive Campus Guide</title> 
+  <link rel="stylesheet" href="style1.css"> 
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    .view-toggle {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 1000;
+      display: flex;
+      gap: 8px;
+      background: rgba(255,255,255,0.95);
+      padding: 6px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    }
+    .view-toggle button {
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: #1b4332;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .view-toggle button.active {
+      background: #1b4332;
+      color: #fff;
+    }
+    #view3d.hidden-view {
+      display: none;
+    }
+    #view2d {
+      display: none;
+      height: 100vh;
+      width: 100%;
+    }
+    #view2d.active {
+      display: block;
+    }
+    #nav2d-controls {
+      position: fixed;
+      top: 70px;
+      right: 16px;
+      z-index: 1000;
+      background: rgba(255,255,255,0.97);
+      padding: 14px;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      font-size: 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 240px;
+    }
+    .nav2d-title {
+      font-weight: 700;
+      color: #1b4332;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+    .nav2d-field {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .nav2d-field label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #555;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    #nav2d-controls select, #nav2d-controls button {
+      padding: 8px 10px;
+      font-size: 13px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    #nav2d-controls button {
+      background: #1b4332;
+      color: white;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-weight: 600;
+      transition: background 0.15s ease;
+    }
+    #nav2d-controls button:hover {
+      background: #2d6a4f;
+    }
+    #swapBtn {
+      align-self: center;
+      background: #eef4f0 !important;
+      color: #1b4332 !important;
+      width: 32px;
+      height: 32px;
+      padding: 0 !important;
+      border-radius: 50% !important;
+      font-size: 16px;
+      margin: -2px 0;
+    }
+    #swapBtn:hover {
+      background: #dcebe2 !important;
+    }
+    #gpsBtn {
+      background: #007AFF !important;
+    }
+    #gpsBtn:hover {
+      background: #0056b3 !important;
+    }
+    #satBtn {
+      background: #6c757d !important;
+    }
+    #satBtn:hover {
+      background: #495057 !important;
+    }
+    #clearRouteBtn {
+      background: #b3261e !important;
+    }
+    #nav2dStats {
+      font-size: 12px;
+      color: #1b4332;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    #view3d, #view2d, #map {
+      margin-left: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+    }
+    .view-toggle {
+      left: auto !important;
+      width: auto !important;
+    }
+    #nav2d-controls {
+      left: auto !important;
+    }
+    .sidebar {
+      position: fixed !important;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      z-index: 2000;
+      transition: transform 0.3s ease;
+    }
+    .sidebar.hidden {
+      transform: translateX(-100%);
+    }
+
+    /* GPS Live Location Pulse Marker */
+    .user-location-dot {
+      width: 14px;
+      height: 14px;
+      background-color: #007AFF;
+      border: 2px solid #FFFFFF;
+      border-radius: 50%;
+      box-shadow: 0 0 8px rgba(0, 122, 255, 0.8);
+      position: relative;
+    }
+    .user-location-dot::after {
+      content: '';
+      position: absolute;
+      top: -6px;
+      left: -6px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid #007AFF;
+      animation: gps-pulse 1.8s infinite ease-out;
+    }
+    @keyframes gps-pulse {
+      0% {
+        transform: scale(0.6);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1.8);
+        opacity: 0;
+      }
+    }
+
+    /* Building hotspot markers */
+    .building-hotspot {
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transform: translate(-50%, -100%);
+    }
+    .hotspot-pin {
+      width: 18px;
+      height: 18px;
+      border-radius: 50% 50% 50% 0;
+      background: #d62828;
+      border: 2px solid #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+      transform: rotate(-45deg);
+      transition: transform 0.15s ease;
+    }
+    .building-hotspot:hover .hotspot-pin {
+      transform: rotate(-45deg) scale(1.2);
+    }
+    .hotspot-label {
+      margin-top: 4px;
+      background: rgba(27,67,50,0.95);
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    /* Mini Popup */
+    .mini-popup {
+      position: fixed;
+      z-index: 4500;
+      width: 220px;
+      background: #1b4332;
+      color: #fff;
+      border-radius: 14px;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.35);
+      padding: 10px;
+      opacity: 0;
+      transform: translate(-50%, calc(-100% - 16px)) scale(0.85);
+      transform-origin: bottom center;
+      transition: opacity 0.22s cubic-bezier(0.34,1.56,0.64,1),
+                  transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      pointer-events: none;
+    }
+    .mini-popup.open {
+      opacity: 1;
+      transform: translate(-50%, calc(-100% - 16px)) scale(1);
+      pointer-events: auto;
+    }
+    .mini-popup::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      bottom: -8px;
+      transform: translateX(-50%);
+      border-width: 8px 8px 0 8px;
+      border-style: solid;
+      border-color: #1b4332 transparent transparent transparent;
+    }
+    .mini-popup img {
+      width: 100%;
+      height: 90px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      background: linear-gradient(#bcd9f7, #d8ecc9);
+    }
+    .mini-popup h4 {
+      margin: 0 0 4px;
+      font-size: 14px;
+      color: #fff;
+    }
+    .mini-popup p {
+      margin: 0 0 8px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #dfece3;
+    }
+    .mini-popup .read-more {
+      background: none;
+      border: none;
+      color: #8ecfff;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      padding: 4px 0;
+      pointer-events: auto;
+      position: relative;
+      z-index: 1;
+    }
+    .mini-popup .read-more:hover {
+      text-decoration: underline;
+    }
+
+    /* Info Card Panel */
+    #infoCard {
+      display: block !important;
+      position: fixed !important;
+      top: 84px !important;
+      right: 16px !important;
+      left: auto !important;
+      bottom: 24px !important;
+      width: 300px !important;
+      height: auto !important;
+      max-height: none !important;
+      box-sizing: border-box !important;
+      padding: 12px !important;
+      overflow-y: auto !important;
+      scrollbar-width: thin;
+      border-radius: 20px !important;
+      background: #1b4332 !important;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.32) !important;
+      z-index: 4000 !important;
+      transform: translateX(calc(100% + 40px));
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.45s cubic-bezier(0.32,0.72,0,1),
+                  opacity 0.3s ease;
+    }
+    #infoCard.open {
+      transform: translateX(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #infoCard .pad {
+      padding: 18px 8px 12px;
+      text-align: center;
+    }
+    #infoCard h3 {
+      color: #fff;
+      font-size: 19px;
+      margin: 0 0 10px;
+    }
+    #infoCard p {
+      color: #dfece3;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    #cardImg {
+      width: 100% !important;
+      height: 190px !important;
+      object-fit: cover !important;
+      border-radius: 14px !important;
+      display: block;
+      background: linear-gradient(#bcd9f7, #d8ecc9);
+    }
+    #cardClose {
+      position: absolute;
+      top: 22px;
+      right: 22px;
+      background: rgba(0,0,0,0.45);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      line-height: 1;
+      z-index: 10;
+    }
+    #cardClose:hover {
+      background: rgba(0,0,0,0.7);
+    }
+    #cardLink {
+      display: inline-block;
+      margin-top: 8px;
+      background: #fff;
+      color: #1b4332;
+      padding: 9px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+  </style>
 </head>
+
 <body>
-    <div class="modern-banner">
-        <!-- Navigation -->
-        <nav class="modern-navbar">
-            <div class="nav-container">
-                <div class="nav-brand">
-                    <img src="../index1logo.webp" class="nav-logo" alt="LSU Logo">
-                    <span class="brand-text">La Salle University</span>
-                </div>
-                
-                <button class="mobile-menu-btn" id="mobileMenuBtn">
-                    <i class='bx bx-menu'></i>
-                </button>
-                
-                <ul class="nav-menu" id="navMenu">
-                    <li><a href="index.html" class="nav-link active"><i class='bx bx-home'></i> Home</a></li>
-                    <li><a href="announcement.html" class="nav-link"><i class='bx bx-megaphone'></i> Announcements</a></li>
-                    <li><a href="contact.html" class="nav-link"><i class='bx bx-envelope'></i> Contact</a></li>
-                    <li><a href="aboutus.html" class="nav-link"><i class='bx bx-group'></i> About Us</a></li>
-                </ul>
-            </div>
-        </nav>
+<aside class="sidebar">
+  <button class="toggle-btn" id="toggleSidebar">
+    <i class='bx bx-chevron-left'></i>
+  </button>
+  
+  <div class="banner">
+    <div class="search-container">
+      <div class="search-box">
+        <i class='bx bx-search search-icon'></i>
+        <input id="search" placeholder="Search buildings, locations..." autocomplete="off" />
+        <button class="search-btn">
+          <i class='bx bx-arrow-right'></i>
+        </button>
+      </div>
+      <div id="search-results" class="search-results"></div>
+    </div>
+  </div>
 
-        <div class="hero-content">
-            <div class="hero-text">
-                <div class="welcome-badge">
-                    <i class='bx bx-map'></i>
-                    Interactive Campus Guide
-                </div>
-                <h1 class="hero-title">
-                    Discover Your Campus
-                    <span class="gradient-text">Experience</span>
-                </h1>
-                <p class="hero-description">
-                    Navigate through La Salle University with our interactive map. 
-                    Find buildings, explore facilities, and make the most of your campus journey.
-                </p>
-                
-                <div class="hero-buttons">
-                    <button class="cta-btn primary" onclick="window.location.href='index1.html'">
-                        <span class="btn-content">
-                            <i class='bx bx-navigation'></i>
-                            EXPLORE CAMPUS
-                        </span>
-                        <div class="btn-shine"></div>
-                    </button>
-                    
-                    <button class="cta-btn secondary" onclick="scrollToFeatures()">
-                        <span class="btn-content">
-                            <i class='bx bx-info-circle'></i>
-                            LEARN MORE
-                        </span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Cards  https://www.youtube.com/watch?v=9FNNkzPBFcE&pp=ygUWaHRtbCBob3cgdG8gbWFrZSBjYXJkcw%3D%3D-->
-            <div class="floating-gallery">
-                <div class="gallery-card">
-                    <img src="Buildings/SB building/Screenshot 2025-11-11 140832.webp" alt="Campus View">
-                    <div class="card-overlay">
-                        <i class='bx bx-building'></i>
-                        <span>Academic Buildings</span>
-                    </div>
-                </div>
-                <div class="gallery-card">
-                    <img src="Screenshot 2025-11-11 162435.webp" alt="Campus View">
-                    <div class="card-overlay">
-                        <i class='bx bx-leaf'></i>
-                        <span>Green Spaces</span>
-                    </div>
-                </div>
-                <div class="gallery-card">
-                    <img src="Buildings/IS Basketball Court/20251106_151614.webp" alt="Campus View">
-                    <div class="card-overlay">
-                        <i class='bx bx-run'></i>
-                        <span>Sports Facilities</span>
-                    </div>
-                </div>
-                <div class="gallery-card">
-                    <img src="Buildings/Star Chapel/Screenshot 2025-11-11 145907.webp" alt="Campus View">
-                    <div class="card-overlay">
-                        <i class='bx bx-book'></i>
-                        <span>Chapel</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Animated Background Elements https://www.youtube.com/watch?v=89vz08bOT_M&pp=ygUiZmxvYXRpbmcgYW5pbWF0aW9uIGJhY2tncm91bmQgaHRtbA%3D%3D-->
-        <div class="background-elements">
-            <div class="floating-shape shape-1"></div>
-            <div class="floating-shape shape-2"></div>
-            <div class="floating-shape shape-3"></div>
-        </div>
-
-        <!-- Scroll Indicator -->
-        <div class="scroll-indicator" onclick="scrollToFeatures()">
-            <div class="scroll-line"></div>
-            <span>Scroll to explore</span>
-        </div>
+  <div class="sidebar-content">
+    <!-- Building Categories Section -->
+    <div class="menu-section">
+      <div class="menu-header">
+        <i class='bx bx-buildings'></i>
+        <span class="menu-title">Building Categories</span>
+        <button class="expand-btn" id="catToggle">
+          <i class='bx bx-chevron-down'></i>
+        </button>
+      </div>
+      <div class="subcats" id="subcats">
+        <button class="subcat-btn" data-cat="all" onclick="window.location.href='Allbuilding.html'">
+          <i class='bx bx-map'></i>
+          <span>All Buildings</span>
+        </button>
+        <button class="subcat-btn" data-cat="administrative" onclick="window.location.href='Administrative.html'">
+          <i class='bx bx-briefcase'></i>
+          <span>Administrative Offices</span>
+        </button>
+        <button class="subcat-btn" data-cat="academic" onclick="window.location.href='Academic.html'">
+          <i class='bx bx-book'></i>
+          <span>Academic Rooms</span>
+        </button>
+        <button class="subcat-btn" data-cat="labs" onclick="window.location.href='Laboratories.html'">
+          <i class='bx bx-test-tube'></i>
+          <span>Laboratories</span>
+        </button>
+        <button class="subcat-btn" data-cat="sports" onclick="window.location.href='Sports.html'">
+          <i class='bx bx-trophy'></i>
+          <span>Sports Facilities</span>
+        </button>
+        <button class="subcat-btn" data-cat="services" onclick="window.location.href='Services.html'">
+          <i class='bx bx-wrench'></i>
+          <span>Services</span>
+        </button>
+      </div>
     </div>
 
-    <!-- Why choose La salle -->
-    <section class="features-section" id="features">
-        <div class="container">
-            <div class="section-header">
-                <h2>Why Choose Our Interactive Map?</h2>
-                <p>Experience campus navigation like never before</p>
-            </div>
+    <!-- Photos & Galleries -->
+    <div class="menu-section">
+      <button class="main-btn gallery-btn" onclick="window.location.href='photosgallery.html'">
+        <i class='bx bx-photo-album'></i>
+        <span>Photos & Galleries</span>
+        <i class='bx bx-chevron-right'></i>
+      </button>
+    </div>
 
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class='bx bx-map-alt'></i>
-                    </div>
-                    <h3>Interactive Navigation</h3>
-                    <p>Find your way around campus with our intuitive, easy-to-use interactive map designed for students and visitors.</p>
-                </div>
+    <!-- Join Us Section -->
+    <div class="menu-section">
+      <div class="menu-header">
+        <i class='bx bx-group'></i>
+        <span class="menu-title">Join Us</span>
+      </div>
+      <div class="menu-content">
+        <button class="main-btn gallery-btn" onclick="window.location.href='admissioninformation.html'">
+          <i class='bx bx-user-plus'></i>
+          <span>Admission Information</span>
+        </button>
+        <button class="main-btn gallery-btn" onclick="window.location.href='registrarinformation.html'">
+          <i class='bx bx-calendar-event'></i>
+          <span>Registrar Information</span>
+        </button>
+      </div>
+    </div>
 
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class='bx bx-buildings'></i>
-                    </div>
-                    <h3>Building Details</h3>
-                    <p>Get comprehensive information about each building, including facilities, departments, and available services.</p>
-                </div>
+    <!-- Settings Section -->
+    <div class="menu-section">
+      <div class="menu-header">
+        <i class='bx bx-cog'></i>
+        <span class="menu-title">Settings</span>
+      </div>
+      <div class="menu-content">
+          <button class="main-btn gallery-btn" onclick="window.location.href='settings.html'">
+          <i class='bx bx-slider-alt'></i>
+          <span>Preferences</span>
+        </button>
+      </div>
+    </div>
 
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class='bx bx-devices'></i>
-                    </div>
-                    <h3>Multi-Platform</h3>
-                    <p>Access the map on any device - desktop, tablet, or mobile - with full functionality across all platforms.</p>
-                </div>
-            </div>
+    <!-- Back Button -->
+    <div class="menu-section">
+      <button class="main-btn back-btn" onclick="window.location.href='index.html'">
+        <i class='bx bx-arrow-back'></i>
+        <span>Go Back to Main</span>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<button class="reopen-btn" id="openSidebar" aria-label="Open sidebar">
+  <i class='bx bx-menu'></i>
+</button>
+
+<!-- View toggle: 3D visual map vs 2D point-to-point navigation -->
+<div class="view-toggle">
+  <button id="btn3d" class="active" onclick="showMapView('3d')">
+    <i class='bx bx-cube-alt'></i> 3D View
+  </button>
+  <button id="btn2d" onclick="showMapView('2d')">
+    <i class='bx bx-map-alt'></i> 2D Navigation
+  </button>
+</div>
+
+<!-- 3D View -->
+<div id="view3d">
+<div id="map" style="height: 100vh; width: 100%; margin: 0; padding: 0; overflow: hidden;">
+
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+  <model-viewer
+    id="campusModel"
+    src="LSU_CAMPUS_1_and_2_3D_model.glb"
+    alt="La Salle University Campus 3D Map"
+    camera-controls
+    touch-action="pan-y"
+    shadow-intensity="1"
+    exposure="1"
+
+    camera-orbit="-42.4547deg 64.4970deg 1147.4278"
+    camera-target="-93.7274m 11.8883m -203.1199m"
+
+    field-of-view="25deg"
+
+    min-camera-orbit="auto 35deg 5%"
+    max-camera-orbit="auto 80deg 7%"
+
+    interaction-prompt="none"
+
+    auto-rotate
+    auto-rotate-delay="3000"
+    rotation-per-second="10deg"
+
+    style="width:100%; height:100vh; display:block; border:none; background:#dfe3e6;">
+
+    <div class="mv-progress-bar" slot="progress-bar">
+      <div class="mv-update-bar"></div>
+    </div>
+
+  </model-viewer>
+
+  <!-- Loading screen: walking student + progress bar -->
+  <div class="map-loader" id="mapLoader" role="status" aria-live="polite">
+    <div class="loader-card">
+      <p class="loader-brand">La Salle University Interactive Campus</p>
+      <p class="loader-text" id="loaderText">Loading the campus map...</p>
+
+      <div class="loader-scene">
+        <!-- scrolling campus silhouettes -->
+        <div class="loader-bg">
+          <svg width="960" height="90" viewBox="0 0 960 90" aria-hidden="true">
+            <defs>
+              <pattern id="ldTiles" width="240" height="90" patternUnits="userSpaceOnUse">
+                <rect x="8" y="30" width="70" height="12" rx="3" fill="#fff" opacity="0.14"/>
+                <rect x="12" y="38" width="62" height="52" rx="3" fill="#fff" opacity="0.10"/>
+                <rect x="116" y="56" width="5" height="34" fill="#fff" opacity="0.10"/>
+                <circle cx="118" cy="46" r="20" fill="#fff" opacity="0.12"/>
+                <rect x="176" y="64" width="4" height="26" fill="#fff" opacity="0.10"/>
+                <circle cx="178" cy="56" r="14" fill="#fff" opacity="0.12"/>
+                <rect x="222" y="40" width="3" height="50" fill="#fff" opacity="0.12"/>
+                <circle cx="223.5" cy="38" r="5" fill="#fff" opacity="0.16"/>
+              </pattern>
+            </defs>
+            <rect width="960" height="90" fill="url(#ldTiles)"/>
+          </svg>
         </div>
-    </section>
 
-    <section class="campus-highlights">
-        <div class="container">
-            <div class="section-header">
-                <h2>Campus Highlights</h2>
-                <p>Discover what makes La Salle University special</p>
-            </div>
-
-            <div class="highlights-grid">
-                <div class="highlight-card">
-                    <div class="highlight-image">
-                        <img src="Photos/scground.png" alt="Academic Excellence">
-                    </div>
-                    <div class="highlight-content">
-                        <h3>SB Building</h3>
-                        <p>A central hub for both academic studies and administrative services, bringing classrooms and key offices under one roof.</p>
-                        <!--<a href="#" class="highlight-link">lorem ipsum <i class='bx bx-chevron-right'></i></a> -->
-                    </div>
-                </div>
-
-                <div class="highlight-card">
-                    <div class="highlight-image">
-                        <img src="Photos/Screenshot 2025-11-13 151947.png" alt="Student Life">
-                    </div>
-                    <div class="highlight-content">
-                        <h3>Green Space</h3>
-                        <p>The heart of student life, this landscaped park offers a serene environment for studying outdoors and socializing between classes.</p>
-                        <!--<a href="#" class="highlight-link">lorem ipsum <i class='bx bx-chevron-right'></i></a> -->
-                    </div>
-                </div>
-
-                <div class="highlight-card">
-                    <div class="highlight-image">
-                        <img src="Buildings/Star Chapel/Screenshot 2025-11-11 145907.webp" alt="Campus Facilities">
-                    </div>
-                    <div class="highlight-content">
-                        <h3>Our Lady of the Star Chapel</h3>
-                        <p> peaceful sanctuary for spiritual reflection, meditation, and community worship.</p>
-                        <!--<a href="#" class="highlight-link">lorem ipsum <i class='bx bx-chevron-right'></i></a> -->
-                    </div>
-                </div>
-            </div>
+        <!-- moving ground line -->
+        <div class="loader-ground">
+          <svg width="520" height="4" viewBox="0 0 520 4" aria-hidden="true">
+            <line x1="0" y1="2" x2="520" y2="2" stroke="#fff" stroke-opacity="0.35" stroke-width="3" stroke-linecap="round" stroke-dasharray="14 12"/>
+          </svg>
         </div>
-    </section>
 
-    <section class="cta-section">
-        <div class="container">
-            <div class="cta-content">
-                <h2>Ready to Explore Campus?</h2>
-                <p>Start your journey with our interactive campus map and discover everything La Salle University has to offer.</p>
-                <button class="cta-btn primary large" onclick="window.location.href='index1.html'">
-                    <span class="btn-content">
-                        <i class='bx bx-navigation'></i>
-                        LAUNCH EXPLORE CAMPUS
-                    </span>
-                </button>
-            </div>
-        </div>
-    </section>
+        <!-- the student -->
+        <svg class="loader-student" width="420" height="200" viewBox="0 0 420 200" aria-hidden="true">
+          <g transform="translate(130 0)">
+            <ellipse class="ld-shadow" cx="80" cy="189" rx="34" ry="5" fill="#000" opacity="0.22"/>
+            <g class="ld-bob">
+              <!-- far leg -->
+              <g class="ld-leg ld-far">
+                <rect x="70" y="118" width="13" height="62" rx="6.5" fill="#1b2b3d"/>
+                <ellipse cx="78" cy="183" rx="12" ry="5.5" fill="#e4e4e4"/>
+              </g>
+              <!-- far arm -->
+              <g class="ld-arm ld-far-arm">
+                <rect x="74" y="72" width="12" height="22" rx="6" fill="#d9d6ca"/>
+                <rect x="75" y="88" width="10" height="28" rx="5" fill="#e0b088"/>
+                <circle cx="80" cy="118" r="6" fill="#e0b088"/>
+              </g>
+              <!-- backpack -->
+              <rect x="46" y="70" width="22" height="42" rx="9" fill="#f2c14e"/>
+              <rect x="48" y="92" width="14" height="14" rx="4" fill="#d9a73a"/>
+              <!-- near leg -->
+              <g class="ld-leg ld-near">
+                <rect x="70" y="118" width="13" height="62" rx="6.5" fill="#243b53"/>
+                <ellipse cx="78" cy="183" rx="12" ry="5.5" fill="#ffffff"/>
+              </g>
+              <!-- neck + torso -->
+              <rect x="78" y="58" width="10" height="12" rx="4" fill="#e7b48a"/>
+              <rect x="60" y="66" width="40" height="58" rx="14" fill="#f7f5ee"/>
+              <path d="M66 72 L72 102" stroke="#d9a73a" stroke-width="5" stroke-linecap="round"/>
+              <path d="M84 67 L91 88" stroke="#2d9d5f" stroke-width="3" stroke-linecap="round"/>
+              <rect x="87" y="88" width="9" height="13" rx="2" fill="#fff" stroke="#2d9d5f" stroke-width="1.5"/>
+              <!-- head -->
+              <circle cx="81" cy="42" r="18" fill="#2b2118"/>
+              <circle cx="86" cy="47" r="15" fill="#f1c7a0"/>
+              <circle cx="78" cy="49" r="3.5" fill="#e7b48a"/>
+              <circle cx="92" cy="46" r="2" fill="#2b2118"/>
+              <path d="M90 54 Q94 57 98 53" fill="none" stroke="#8b4a2b" stroke-width="1.6" stroke-linecap="round"/>
+              <!-- near arm holding a campus map -->
+              <g class="ld-arm ld-near-arm">
+                <rect x="74" y="72" width="12" height="22" rx="6" fill="#ece9de" stroke="#d6d3c6" stroke-width="1"/>
+                <rect x="75" y="88" width="10" height="28" rx="5" fill="#f1c7a0"/>
+                <circle cx="80" cy="118" r="6" fill="#f1c7a0"/>
+                <rect x="82" y="104" width="17" height="21" rx="2.5" fill="#fff" stroke="#2d9d5f" stroke-width="1.5"/>
+                <path d="M85 121 L90 113 L94 118 L97 109" fill="none" stroke="#d62828" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              </g>
+            </g>
+          </g>
+        </svg>
+      </div>
 
-    <footer class="modern-footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-brand">
-                    <img src="../index1logo.webp" alt="LSU Logo" class="footer-logo">
-                    <div class="footer-info">
-                        <h3>La Salle University</h3>
-                        <p>Interactive Campus Map</p>
-                    </div>
-                </div>
-                
-                <div class="footer-links">
-                    <div class="footer-column">
-                        <h4>Quick Links</h4>
-                        <a href="index.html">Home</a>
-                        <a href="announcement.html">Announcements</a>
-                        <a href="contact.html">Contact</a>
-                        <a href="aboutus.html">About Us</a>
-                    </div>
-               
-                    <div class="footer-column">
-                        <h4>More Info</h4>
-                        <a>Number</a>
-                        <a>Gmail</a>
-                        <a>Location</a>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="footer-bottom">
-                <p>&copy; All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
+      <div class="loader-bar"><div class="loader-fill" id="loaderFill"></div></div>
+      <p class="loader-percent"><span id="loaderPercent">0</span><small>%</small></p>
+      <p class="loader-tip" id="loaderTip">Tip: Click a pin to see building info.</p>
+      <button id="loaderRetry" onclick="location.reload()">Try again</button>
+    </div>
+  </div>
+</div>
+</div>
 
-    <script>
-        // Mobile menu functionality
-        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-        const navMenu = document.getElementById('navMenu');
+<!-- 2D Navigation View -->
+<div id="view2d">
+  <div id="nav2d-controls">
+    <div class="nav2d-title"><i class='bx bx-map-alt'></i> Campus Navigator</div>
+    <div class="nav2d-field">
+      <label><i class='bx bx-radio-circle-marker' style="color:#2d9d5f;"></i> From</label>
+      <select id="nav2dFrom"></select>
+    </div>
+    <button id="swapBtn" onclick="swap2DRoute()" title="Swap start and end"><i class='bx bx-transfer-alt'></i></button>
+    <div class="nav2d-field">
+      <label><i class='bx bx-map-pin' style="color:#d62828;"></i> To</label>
+      <select id="nav2dTo"></select>
+    </div>
+    <button id="findRouteBtn" onclick="find2DRoute()"><i class='bx bx-directions'></i> Find Route</button>
+    <button id="clearRouteBtn" onclick="clear2DRoute()"><i class='bx bx-x'></i> Clear</button>
+    <button id="gpsBtn" onclick="toggleGPSTracking()"><i class='bx bx-current-location'></i> Enable Live GPS</button>
+    <button id="satBtn" onclick="toggleSatelliteView()"><i class='bx bx-layer'></i> Satellite Overlay</button>
+    <div id="nav2dStats"></div>
+    <div id="nav2dStatus" style="font-size:12px;color:#b00020;max-width:220px"></div>
+  </div>
+  <div id="leafletMap" style="height: 100%; width: 100%;"></div>
+</div>
 
-        mobileMenuBtn.addEventListener('click', () => {
-            navMenu.classList.toggle('active');
-            mobileMenuBtn.innerHTML = navMenu.classList.contains('active') ? 
-                '<i class="bx bx-x"></i>' : '<i class="bx bx-menu"></i>';
-        });
+<style>
+  .mv-progress-bar {
+    display: none !important;
+    width: 33%;
+    height: 4px;
+    max-width: 300px;
+    border-radius: 2px;
+    box-shadow: 0px 0px 3px 1px rgba(0,0,0,0.15);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate3d(-50%, -50%, 0);
+    background-color: rgba(0,0,0,0.1);
+  }
+  .mv-update-bar {
+    background-color: #4285f4;
+    width: 0%;
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
 
-        // Close mobile menu when clicking on links
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', () => {
-                navMenu.classList.remove('active');
-                mobileMenuBtn.innerHTML = '<i class="bx bx-menu"></i>';
-            });
-        });
+  /* Map loader styling */
+  #map { position: relative; }
 
-        // Scroll to features function
-        function scrollToFeatures() {
-            document.getElementById('features').scrollIntoView({ 
-                behavior: 'smooth' 
-            });
+  .map-loader {
+    position: absolute;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    padding-left: 320px;
+    background: linear-gradient(160deg, #123325 0%, #1b4332 45%, #2d6a4f 100%);
+    font-family: 'Inter', Arial, sans-serif;
+    transition: opacity 0.6s ease, visibility 0.6s ease;
+  }
+  .map-loader.done {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .loader-card {
+    width: 420px;
+    max-width: 90%;
+    text-align: center;
+    color: #fff;
+  }
+  .loader-brand {
+    margin: 0 0 8px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.6);
+  }
+  .loader-text {
+    margin: 0 0 6px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .loader-scene {
+    position: relative;
+    width: 420px;
+    height: 200px;
+    max-width: 100%;
+    margin: 0 auto;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 16%, #000 84%, transparent 100%);
+            mask-image: linear-gradient(90deg, transparent 0%, #000 16%, #000 84%, transparent 100%);
+  }
+  .loader-bg {
+    position: absolute;
+    left: 0;
+    bottom: 12px;
+    width: 960px;
+    height: 90px;
+    will-change: transform;
+    animation: ldScrollBg 9s linear infinite;
+  }
+  .loader-ground {
+    position: absolute;
+    left: 0;
+    bottom: 10px;
+    width: 520px;
+    height: 4px;
+    will-change: transform;
+    animation: ldScrollGround 0.9s linear infinite;
+  }
+  .loader-student {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+  @keyframes ldScrollBg     { to { transform: translateX(-240px); } }
+  @keyframes ldScrollGround { to { transform: translateX(-52px); } }
+
+  .ld-bob    { animation: ldBob 0.45s ease-in-out infinite; }
+  .ld-shadow { transform-box: fill-box; transform-origin: center; animation: ldShadow 0.45s ease-in-out infinite; }
+  .ld-leg, .ld-arm { transform-box: fill-box; transform-origin: 50% 0%; }
+  .ld-near     { animation: ldLeg 0.9s ease-in-out infinite; }
+  .ld-far      { animation: ldLeg 0.9s ease-in-out infinite; animation-delay: -0.45s; }
+  .ld-near-arm { animation: ldArm 0.9s ease-in-out infinite; }
+  .ld-far-arm  { animation: ldArm 0.9s ease-in-out infinite; animation-delay: -0.45s; }
+  @keyframes ldBob    { 0%, 100% { transform: translateY(0); }  50% { transform: translateY(-4px); } }
+  @keyframes ldShadow { 0%, 100% { transform: scaleX(1); }      50% { transform: scaleX(0.88); } }
+  @keyframes ldLeg    { 0%, 100% { transform: rotate(26deg); }  50% { transform: rotate(-26deg); } }
+  @keyframes ldArm    { 0%, 100% { transform: rotate(-22deg); } 50% { transform: rotate(22deg); } }
+
+  .loader-bar {
+    height: 10px;
+    margin: 10px auto 0;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.18);
+    overflow: hidden;
+  }
+  .loader-fill {
+    width: 0%;
+    height: 100%;
+    border-radius: 999px;
+    background: #f2c14e;
+    transition: width 0.35s ease;
+  }
+  .loader-percent {
+    margin: 12px 0 2px;
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #fff;
+  }
+  .loader-percent small { font-size: 18px; font-weight: 600; margin-left: 2px; }
+  .loader-tip {
+    min-height: 20px;
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: rgba(255,255,255,0.75);
+    transition: opacity 0.35s ease;
+  }
+  .loader-tip.fade { opacity: 0; }
+  #loaderRetry {
+    display: none;
+    margin-top: 14px;
+    padding: 9px 20px;
+    border: none;
+    border-radius: 10px;
+    background: #f2c14e;
+    color: #1b4332;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .map-loader.error #loaderRetry { display: inline-block; }
+  .map-loader.error .loader-scene * { animation-play-state: paused; }
+  .map-loader.error .loader-percent,
+  .map-loader.error .loader-bar,
+  .map-loader.error .loader-tip { display: none; }
+
+  @media (max-width: 900px) { .map-loader { padding-left: 0; } }
+  @media (max-width: 480px) {
+    .loader-scene { transform: scale(0.78); margin: -22px auto; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .loader-scene * { animation: none !important; }
+  }
+</style>
+
+<script>
+  customElements.whenDefined('model-viewer').then(() => {
+    customElements.get('model-viewer').minimumRenderScale = 1;
+  });
+
+  const mapModelViewer = document.querySelector('#map model-viewer');
+
+  const loaderEl = document.getElementById('mapLoader');
+  const loaderFill = document.getElementById('loaderFill');
+  const loaderPercent = document.getElementById('loaderPercent');
+  const loaderText = document.getElementById('loaderText');
+  const loaderTipEl = document.getElementById('loaderTip');
+  const loaderStart = performance.now();
+  const LOADER_MIN_MS = 900;
+  let loaderFinished = false;
+  let loaderShown = 0;
+
+  const loaderTips = [
+    'Tip: Click a pin to see building info.',
+    'Tip: Drag to rotate. Scroll to zoom.',
+    'Tip: Use the search bar to find a building.',
+    'Tip: Open 2D Navigation to get walking directions.'
+  ];
+  let loaderTipIndex = 0;
+  const loaderTipTimer = loaderEl ? setInterval(() => {
+    loaderTipEl.classList.add('fade');
+    setTimeout(() => {
+      loaderTipIndex = (loaderTipIndex + 1) % loaderTips.length;
+      loaderTipEl.textContent = loaderTips[loaderTipIndex];
+      loaderTipEl.classList.remove('fade');
+    }, 350);
+  }, 3500) : null;
+
+  function setLoaderProgress(fraction) {
+    if (!loaderEl || loaderFinished) return;
+    const pct = Math.min(100, Math.max(loaderShown, Math.round(fraction * 100)));
+    loaderShown = pct;
+    loaderFill.style.width = pct + '%';
+    loaderPercent.textContent = pct;
+    if (pct >= 100) loaderText.textContent = 'Putting the buildings in place...';
+  }
+
+  function finishLoader() {
+    if (!loaderEl || loaderFinished) return;
+    loaderFinished = true;
+    clearInterval(loaderTipTimer);
+    const wait = Math.max(0, LOADER_MIN_MS - (performance.now() - loaderStart));
+    setTimeout(() => {
+      loaderFill.style.width = '100%';
+      loaderPercent.textContent = '100';
+      loaderEl.classList.add('done');
+      setTimeout(() => { loaderEl.style.display = 'none'; }, 700);
+    }, wait);
+  }
+
+  if (mapModelViewer) {
+    mapModelViewer.addEventListener('progress', (event) => {
+      setLoaderProgress(event.detail.totalProgress);
+      const progressBar = mapModelViewer.querySelector('.mv-update-bar');
+      const container = mapModelViewer.querySelector('.mv-progress-bar');
+      if (progressBar) progressBar.style.width = `${event.detail.totalProgress * 100}%`;
+      if (container) container.style.display = event.detail.totalProgress === 1 ? 'none' : 'block';
+    });
+
+    mapModelViewer.addEventListener('load', finishLoader);
+    if (mapModelViewer.loaded) finishLoader();
+
+    mapModelViewer.addEventListener('error', () => {
+      if (!loaderEl || loaderFinished) return;
+      clearInterval(loaderTipTimer);
+      loaderText.textContent = "We couldn't load the campus map. Please check your connection.";
+      loaderEl.classList.add('error');
+    });
+
+    mapModelViewer.addEventListener('camera-change', (event) => {
+      if (event.detail && event.detail.source === 'user-interaction') {
+        if (typeof onUserCameraInteraction === 'function') onUserCameraInteraction();
+      }
+    });
+  }
+</script>
+
+<!-- Small popup shown first when a marker is clicked -->
+<div class="mini-popup" id="miniPopup">
+  <img src="" alt="" id="miniImg" />
+  <h4 id="miniTitle"></h4>
+  <p id="miniDesc"></p>
+  <button class="read-more" onclick="openReadMore()">READ MORE &gt;&gt;</button>
+</div>
+
+<!-- Bigger slide-in panel -->
+<div class="card" id="infoCard">
+  <button id="cardClose" onclick="closeCard()">✕</button>
+  <img src="" alt="Building" id="cardImg" />
+  <div class="pad">
+    <h3 id="cardTitle"></h3>
+    <p id="cardDesc"></p>
+    <a id="cardLink" href="#" style="display:none;">View Details</a>
+  </div>
+</div>
+
+<!-- Chatbot -->
+<div class="chat-btn" id="chatBtn">💬</div>
+<div class="chat-box" id="chatBox">
+  <div class="chat-head">La Salle AI Assistant</div>
+  <div class="chat-body" id="chatBody"></div>
+  <div class="chat-input">
+    <input type="text" id="chatInput" placeholder="Ask about admissions, tuition, campus..." />
+    <button onclick="sendMessage()">➤</button>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// Menu Category Toggle
+document.getElementById('catToggle').onclick = () => {
+  const subcats = document.getElementById('subcats');
+  const icon = document.getElementById('catToggle').querySelector('i');
+  
+  subcats.style.display = subcats.style.display === 'flex' ? 'none' : 'flex';
+  icon.className = subcats.style.display === 'flex' ? 'bx bx-chevron-up' : 'bx bx-chevron-down';
+};
+
+// 3D View Popups
+let currentPopupBuilding = null;
+let popupRequestId = 0;
+let viewBeforeZoom = null;
+let cameraMoves = 0;
+defaultDecay = null;
+
+const ZOOM_FOV_FACTOR = 0.78;
+const ZOOM_PAN_AMOUNT = 0.35;
+const SMOOTH_DECAY = 120;
+
+function getModelViewerEl() {
+  return document.querySelector('#map model-viewer');
+}
+
+function pauseAutoRotateForPopup() {
+  const mv = getModelViewerEl();
+  if (mv && mv.hasAttribute('auto-rotate')) {
+    mv.dataset.wasAutoRotating = 'true';
+    mv.removeAttribute('auto-rotate');
+  }
+}
+
+function resumeAutoRotate() {
+  const mv = getModelViewerEl();
+  if (mv && mv.dataset.wasAutoRotating === 'true') {
+    mv.setAttribute('auto-rotate', '');
+    mv.dataset.wasAutoRotating = 'false';
+  }
+}
+
+function isAnyPopupOpen() {
+  return document.getElementById('miniPopup').classList.contains('open') ||
+         document.getElementById('infoCard').classList.contains('open');
+}
+
+function whenCameraSettled(mv, callback) {
+  const start = performance.now();
+  let lastChange = start;
+  let finished = false;
+  const onChange = () => { lastChange = performance.now(); };
+  mv.addEventListener('camera-change', onChange);
+
+  const tick = () => {
+    if (finished) return;
+    const now = performance.now();
+    const elapsed = now - start;
+    if ((elapsed > 450 && now - lastChange > 140) || elapsed > 1800) {
+      finished = true;
+      mv.removeEventListener('camera-change', onChange);
+      callback();
+      return;
+    }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+function readFov(mv) {
+  if (typeof mv.getFieldOfView === 'function') return mv.getFieldOfView();
+  return parseFloat(mv.getAttribute('field-of-view')) || 25;
+}
+
+function moveCamera(mv, target, fov, done) {
+  if (defaultDecay === null) defaultDecay = mv.interpolationDecay || 50;
+  cameraMoves++;
+  mv.interpolationDecay = SMOOTH_DECAY;
+  mv.cameraTarget = `${target.x.toFixed(3)}m ${target.y.toFixed(3)}m ${target.z.toFixed(3)}m`;
+  mv.fieldOfView = `${fov.toFixed(2)}deg`;
+  whenCameraSettled(mv, () => {
+    cameraMoves--;
+    if (cameraMoves === 0) mv.interpolationDecay = defaultDecay;
+    done();
+  });
+}
+
+function zoomTowardMarker(mv, markerEl, done) {
+  const pos = (markerEl.getAttribute('data-position') || '').trim().split(/\s+/).map(Number);
+  if (pos.length !== 3 || pos.some(isNaN)) { done(); return; }
+
+  if (!viewBeforeZoom) {
+    viewBeforeZoom = { target: mv.getCameraTarget(), fov: readFov(mv) };
+  }
+  const base = viewBeforeZoom;
+  const target = {
+    x: base.target.x + (pos[0] - base.target.x) * ZOOM_PAN_AMOUNT,
+    y: base.target.y + (pos[1] - base.target.y) * ZOOM_PAN_AMOUNT,
+    z: base.target.z + (pos[2] - base.target.z) * ZOOM_PAN_AMOUNT
+  };
+  moveCamera(mv, target, base.fov * ZOOM_FOV_FACTOR, done);
+}
+
+function restoreViewAndResume() {
+  const mv = getModelViewerEl();
+  if (!mv) return;
+  if (!viewBeforeZoom) { resumeAutoRotate(); return; }
+
+  const myId = popupRequestId;
+  const v = viewBeforeZoom;
+  moveCamera(mv, v.target, v.fov, () => {
+    if (myId !== popupRequestId) return;
+    viewBeforeZoom = null;
+    if (!isAnyPopupOpen()) resumeAutoRotate();
+  });
+}
+
+function maybeRestoreView() {
+  if (!isAnyPopupOpen()) restoreViewAndResume();
+}
+
+function onUserCameraInteraction() {
+  if (cameraMoves > 0) return;
+  viewBeforeZoom = null;
+  popupRequestId++;
+  document.getElementById('miniPopup').classList.remove('open');
+  if (!isAnyPopupOpen()) resumeAutoRotate();
+}
+
+function closeAllBuildingPopups() {
+  popupRequestId++;
+  document.getElementById('miniPopup').classList.remove('open');
+  document.getElementById('infoCard').classList.remove('open');
+  restoreViewAndResume();
+}
+
+function showMiniPopup(building, markerEl) {
+  const mv = getModelViewerEl();
+  const myId = ++popupRequestId;
+  currentPopupBuilding = building;
+
+  const popup = document.getElementById('miniPopup');
+  popup.classList.remove('open');
+  document.getElementById('infoCard').classList.remove('open');
+
+  document.getElementById('miniImg').src = building.image || '';
+  document.getElementById('miniTitle').innerText = building.name;
+  document.getElementById('miniDesc').innerText = 'Tap "Read More" to learn more about this building.';
+
+  pauseAutoRotateForPopup();
+
+  const openPopup = () => {
+    if (myId !== popupRequestId) return;
+
+    const rect = markerEl.getBoundingClientRect();
+    const halfWidth = 110;
+    const left = Math.min(Math.max(rect.left + rect.width / 2, halfWidth + 8), window.innerWidth - halfWidth - 8);
+    let top = rect.top;
+
+    popup.style.left = left + 'px';
+    popup.style.top = top + 'px';
+    popup.classList.add('open');
+
+    requestAnimationFrame(() => {
+      const popupRect = popup.getBoundingClientRect();
+      const minTop = 90;
+      if (popupRect.top < minTop) {
+        top += (minTop - popupRect.top);
+        popup.style.top = top + 'px';
+      }
+    });
+  };
+
+  if (mv) zoomTowardMarker(mv, markerEl, openPopup);
+  else openPopup();
+}
+
+function hideMiniPopup(restoreView = true) {
+  popupRequestId++;
+  document.getElementById('miniPopup').classList.remove('open');
+  if (restoreView) maybeRestoreView();
+}
+
+function openReadMore() {
+  if (!currentPopupBuilding) return;
+  const b = currentPopupBuilding;
+  showCard(b.name, b.image, b.description || 'Tap "View Details" to learn more about this building.', b.page);
+  hideMiniPopup(false);
+}
+
+function closeCard() {
+  document.getElementById('infoCard').classList.remove('open');
+  maybeRestoreView();
+}
+
+document.getElementById('miniPopup').addEventListener('click', (e) => {
+  e.stopPropagation();
+});
+
+document.addEventListener('click', (e) => {
+  const popup = document.getElementById('miniPopup');
+  if (popup.classList.contains('open') &&
+      !popup.contains(e.target) &&
+      !e.target.closest('.building-hotspot')) {
+    hideMiniPopup();
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    hideMiniPopup();
+    closeCard();
+  }
+});
+
+function showCard(title, img, desc, page) {
+  document.getElementById('infoCard').classList.add('open');
+  document.getElementById('cardTitle').innerText = title;
+  document.getElementById('cardImg').src = img;
+  document.getElementById('cardDesc').innerText = desc;
+  const link = document.getElementById('cardLink');
+  if (page) {
+    link.href = page;
+    link.style.display = 'inline-block';
+  } else {
+    link.style.display = 'none';
+  }
+}
+
+// 3D Hotspot Positions
+const buildingPositions = {
+  "BVM Building": { position: "-109.05 18.61 -306.19", normal: "-0.00 0.97 0.24" },
+  "SJ Building": { position: "-30.61 15.17 -273.21", normal: "0 1 0" },
+  "LS Building": { position: "-196.07 11.59 -118.17", normal: "0.00 0.94 -0.34" },
+  "Art Center": { position: "-201.25 13.64 -179.63", normal: "-0.00 0.97 0.24" },
+  "ROTC Building": { position: "13.84 8.73 -90.33", normal: "0 1 0" },
+  "IS Basketball Court": { position: "-78.10 11.42 -367.26", normal: "0 1 0" },
+  "SB Building": { position: "-112.10 14.42 -10.13", normal: "0 1 0" },
+  "Star Chapel": { position: "-114.45 10.45 -86.44", normal: "0 1 0" },
+  "SC Building": { position: "-115.97 14.66 -151.51", normal: "0 1 0" },
+  "Lasallian Mission Unit (LMU)": { position: "-173.33 10.69 -60.32", normal: "0 1 0" },
+  "Deportivo": { position: "-33.25 11.62 2.63", normal: "0 1 0" },
+  "Recycling": { position: "13.84 8.73 -80.33", normal: "0 1 0" },
+  "Oval": { position: "-9.08 4.57 -44.73", normal: "0 1 0" },
+  "University Clinic": { position: "-141.31 7.08 -38.26", normal: "0 1 0" },
+  "USG Office": { position: "-148.28 7.61 -70.80", normal: "0 1 0" }
+};
+
+function slugify(name) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+}
+
+function renderBuildingHotspots() {
+  const mv = document.querySelector('#map model-viewer');
+  if (!mv) return;
+
+  buildings.forEach((building) => {
+    const pos = buildingPositions[building.name];
+    if (!pos) return;
+
+    const slot = 'hotspot-' + slugify(building.name);
+
+    const btn = document.createElement('button');
+    btn.className = 'building-hotspot';
+    btn.slot = slot;
+    btn.dataset.position = pos.position;
+    btn.dataset.normal = pos.normal;
+    btn.setAttribute('slot', slot);
+    btn.setAttribute('data-position', pos.position);
+    btn.setAttribute('data-normal', pos.normal);
+    btn.onclick = () => showMiniPopup(building, btn);
+
+    const pin = document.createElement('span');
+    pin.className = 'hotspot-pin';
+    const label = document.createElement('span');
+    label.className = 'hotspot-label';
+    label.textContent = building.name;
+
+    btn.appendChild(pin);
+    btn.appendChild(label);
+    mv.appendChild(btn);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', renderBuildingHotspots);
+if (document.readyState !== 'loading') renderBuildingHotspots();
+
+function enableHotspotPicker() {
+  const mv = document.querySelector('#map model-viewer');
+  mv.addEventListener('click', (event) => {
+    const rect = mv.getBoundingClientRect();
+    const hit = mv.positionAndNormalFromPoint(
+      event.clientX - rect.left,
+      event.clientY - rect.top
+    );
+    if (hit) {
+      console.log(
+        `position: "${hit.position.x.toFixed(2)} ${hit.position.y.toFixed(2)} ${hit.position.z.toFixed(2)}", ` +
+        `normal: "${hit.normal.x.toFixed(2)} ${hit.normal.y.toFixed(2)} ${hit.normal.z.toFixed(2)}"`
+      );
+    } else {
+      console.log('No surface hit at that point - click directly on the model.');
+    }
+  });
+  console.log('Hotspot picker enabled. Click any building to log its coordinates.');
+}
+
+// Search buildings array
+const searchInput = document.getElementById('search');
+const searchResults = document.getElementById('search-results');
+const searchBtn = document.querySelector('.search-btn');
+
+const buildings = [
+  {
+    name: "BVM Building",
+    keywords: ["BVM", "office", "administration"],
+    page: "Buildings/BVM/bvmbuilding.html",
+    image: "Buildings/BVM/isbuilding-panorama.jpg"
+  },
+  {
+    name: "SJ Building",
+    keywords: ["admin", "office", "administration"],
+    page: "Buildings/SJ Building/sjbuilding.html",
+    image: "Buildings/SJ Building/20251002_161219.jpg"
+  },
+  {
+    name: "LS Building",
+    keywords: ["building", "office", "administration"],
+    page: "Buildings/LS Building/lsbuilding.html",
+    image: "Buildings/LS Building/Screenshot 2025-11-10 144355.png"
+  },
+  {
+    name: "Art Center",
+    keywords: ["lab", "Art", "Gym"],
+    page: "Buildings/Art Center/artcenterbuilding.html",
+    image: "Photos/Screenshot 2025-11-13 152105.png"
+  },
+  {
+    name: "ROTC Building",
+    keywords: ["ROTC", "computer", "building"],
+    page: "Buildings/ROTC/rotcbuilding.html",
+    image: "Buildings/ROTC/Screenshot 2025-11-11 143250.png"
+  },
+  {
+    name: "IS Basketball Court",
+    keywords: ["sports", "gym", "basketball"],
+    page: "Buildings/IS Basketball Court/isbasketballcourt.html",
+    image: "Photos/bvmcoveredcourt.png"
+  },
+  {
+    name: "SB Building",
+    keywords: ["SB", "ground", "basketball"],
+    page: "Buildings/SB building/sbbuilding.html",
+    image: "Buildings/SB building/Screenshot 2025-11-11 140832.webp"
+  },
+  {
+    name: "Star Chapel",
+    keywords: ["chapel", "building", "religious"],
+    page: "Buildings/Star Chapel/starchapel.html",
+    image: "Photos/Screenshot 2025-11-13 152006.png",
+    description: "A place of worship and reflection for the La Salle community. Mass schedule: Monday to Friday, 12:00 PM. \n Tap View Details to learn more about this building"
+  },
+  {
+    name: "SC Building",
+    keywords: ["SC", "building", "religious"],
+    page: "Buildings/SC/scbuilding.html",
+    image: "Buildings/SC/20251002_160309.jpg"
+  },
+  {
+    name: "Lasallian Mission Unit (LMU)",
+    keywords: ["LMU", "building", "administrative"],
+    page: "Buildings/LMU/LMU.html",
+    image: "Photos/Screenshot 2025-11-13 152051.png"
+  },
+  {
+    name: "Deportivo",
+    keywords: ["Deportivo", "building", "Basketball"],
+    page: "Buildings/SC/scbuilding.html",
+    image: "Photos/Screenshot 2025-11-13 151839.png"
+  },
+  {
+    name: "La Librarie",
+    keywords: ["La Librarie", "building", "religious"],
+    page: "Buildings/La Librarie/lalibrarie.html",
+    image: "starchapel.jpg"
+  },
+  {
+    name: "Recycling",
+    keywords: ["Recycling", "building", "religious"],
+    page: "Buildings/Recycling/recycling.html",
+    image: "Buildings/Recycling/20251106_155451.jpg"
+  },
+  {
+    name: "Oval",
+    keywords: ["Oval", "building", "religious"],
+    page: "Buildings/Oval/oval.html",
+    image: "Buildings/Oval/20251106_155214.jpg"
+  },
+  {
+    name: "University Clinic",
+    keywords: ["University Clinic", "building", "Clinic"],
+    page: "Buildings/University Clinic/universityclinic.html",
+    image: "Buildings/University Clinic/20251106_155012.jpg"
+  },
+  {
+    name: "USG Office",
+    keywords: ["office", "student", "government"],
+    page: "Buildings/USG Office/usgoffice.html",
+    image: "Buildings/USG Office/Screenshot 2025-11-11 151843.png"
+  }
+];
+
+function filterBuildings(query) {
+  if (!query) return [];
+  const lowerCaseQuery = query.toLowerCase();
+  return buildings.filter(building => {
+    return building.name.toLowerCase().includes(lowerCaseQuery) ||
+           building.keywords.some(keyword => keyword.toLowerCase().includes(lowerCaseQuery));
+  });
+}
+
+function displayResults(results) {
+  searchResults.innerHTML = '';
+  
+  if (results.length === 0 && searchInput.value.trim() !== '') {
+    const noResults = document.createElement('div');
+    noResults.className = 'no-results';
+    noResults.innerHTML = '<i class="bx bx-search"></i><span>No buildings found</span>';
+    searchResults.appendChild(noResults);
+    searchResults.style.display = 'block';
+    return;
+  }
+  
+  if (results.length === 0) {
+    searchResults.style.display = 'none';
+    return;
+  }
+  
+  results.forEach(building => {
+    const resultItem = document.createElement('div');
+    resultItem.className = 'result-item';
+    
+    const imageDiv = document.createElement('div');
+    imageDiv.className = 'result-image';
+    
+    const img = document.createElement('img');
+    img.src = building.image;
+    img.alt = building.name;
+    img.onerror = function() {
+      this.style.display = 'none';
+      const fallbackText = document.createElement('div');
+      fallbackText.innerHTML = '<i class="bx bx-building"></i>';
+      imageDiv.appendChild(fallbackText);
+    };
+    
+    imageDiv.appendChild(img);
+    
+    const nameDiv = document.createElement('div');
+    nameDiv.className = 'result-name';
+    nameDiv.textContent = building.name;
+    
+    resultItem.appendChild(imageDiv);
+    resultItem.appendChild(nameDiv);
+    
+    resultItem.addEventListener('click', () => {
+      window.location.href = building.page;
+      searchInput.value = '';
+      searchResults.style.display = 'none';
+    });
+    
+    searchResults.appendChild(resultItem);
+  });
+  
+  searchResults.style.display = 'block';
+}
+
+searchInput.addEventListener('input', function() {
+  const query = this.value.trim();
+  const results = filterBuildings(query);
+  displayResults(results);
+});
+
+searchBtn.addEventListener('click', function() {
+  const query = searchInput.value.trim();
+  if (query) {
+    const results = filterBuildings(query);
+    if (results.length > 0) {
+      window.location.href = results[0].page;
+    }
+  }
+});
+
+document.addEventListener('click', function(e) {
+  if (!document.querySelector('.search-container').contains(e.target)) {
+    searchResults.style.display = 'none';
+  }
+});
+
+// Sidebar Controls
+const sidebar = document.querySelector(".sidebar");
+const toggleBtn = document.getElementById("toggleSidebar");
+const openBtn = document.getElementById("openSidebar");
+
+toggleBtn.addEventListener("click", () => {
+  sidebar.classList.add("hidden");
+  openBtn.style.display = "grid";
+});
+
+openBtn.addEventListener("click", () => {
+  sidebar.classList.remove("hidden");
+  openBtn.style.display = "none";
+});
+
+// View Toggle System (3D vs 2D)
+let leafletMapInitialized = false;
+
+function showMapView(view) {
+  const view3d = document.getElementById('view3d');
+  const view2d = document.getElementById('view2d');
+  const btn3d = document.getElementById('btn3d');
+  const btn2d = document.getElementById('btn2d');
+
+  if (view === '3d') {
+    view3d.classList.remove('hidden-view');
+    view2d.classList.remove('active');
+    btn3d.classList.add('active');
+    btn2d.classList.remove('active');
+  } else {
+    if (typeof closeAllBuildingPopups === 'function') closeAllBuildingPopups();
+    view3d.classList.add('hidden-view');
+    view2d.classList.add('active');
+    btn3d.classList.remove('active');
+    btn2d.classList.add('active');
+
+    if (!leafletMapInitialized) {
+      initLeafletNav();
+      leafletMapInitialized = true;
+    } else {
+      setTimeout(() => {
+        if (leafletMap) {
+          leafletMap.invalidateSize();
+          const bounds = [[0, 0], [MAP_H, MAP_W]];
+          leafletMap.fitBounds(bounds);
         }
+      }, 200);
+    }
+  }
+}
 
-        // Navbar scroll effect
-        window.addEventListener('scroll', () => {
-            const navbar = document.querySelector('.modern-navbar');
-            const scrolled = window.pageYOffset;
-            
-            if (scrolled > 100) {
-                navbar.style.background = 'rgba(255, 255, 255, 0.98)';
-                navbar.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.1)';
-            } else {
-                navbar.style.background = 'rgba(255, 255, 255, 0.95)';
-                navbar.style.boxShadow = 'none';
-            }
+// 2D Navigation Engine
+let MAP_W = 1410, MAP_H = 840, MAP_IMAGE = "campus-map.png", METERS_PER_PIXEL = 0.35;
+const GRAPH_FILE = "campus-graph.json";
 
-            // Hide scroll indicator when scrolled
-            const scrollIndicator = document.querySelector('.scroll-indicator');
-            if (scrolled > 50) {
-                scrollIndicator.style.opacity = '0';
-                scrollIndicator.style.visibility = 'hidden';
-            } else {
-                scrollIndicator.style.opacity = '1';
-                scrollIndicator.style.visibility = 'visible';
-            }
-        });
+const toLL = (x, y) => {
+  const swLat = 8.146679, swLng = 123.842943;
+  const neLat = 8.153333, neLng = 123.848912;
+  const lat = swLat + (y / MAP_H) * (neLat - swLat);
+  const lng = swLng + (x / MAP_W) * (neLng - swLng);
+  return [lat, lng];
+};
+const navNodes = {};
 
-        // Animation on scroll
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
+function sampleGraph() {
+  const nodes = {};
+  const add = (id, x, y, type = "waypoint", name = null) => { nodes[id] = { x, y, type, name, connects_to: [] }; };
+  const link = (a, b) => { nodes[a].connects_to.push(b); nodes[b].connects_to.push(a); };
+
+  add("b1",  540, 375, "building", "Building 1");
+  add("b28", 740, 525, "building", "Building 28");
+  add("b22", 700, 612, "building", "Building 22");
+  add("b21", 560, 700, "building", "Building 21");
+  add("b3",  518, 706, "building", "Building 3");
+  add("circle", 525, 410);
+  add("main_1", 628, 395);
+  add("main_2", 628, 525);
+  add("main_3", 640, 615);
+  add("main_4", 640, 665);
+  add("south_road", 560, 712);
+
+  link("b1", "circle");      link("circle", "main_1");
+  link("main_1", "main_2");  link("main_2", "b28");
+  link("main_2", "main_3");  link("main_3", "b22");
+  link("main_3", "main_4");  link("main_4", "south_road");
+  link("south_road", "b21"); link("south_road", "b3");
+
+  return { image: MAP_IMAGE, width: MAP_W, height: MAP_H, metersPerPixel: METERS_PER_PIXEL, nodes };
+}
+
+async function loadGraph() {
+  let g;
+  try {
+    const url = new URL(GRAPH_FILE, document.baseURI).href;
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error("not found at " + url + " (HTTP " + res.status + ")");
+    try { g = await res.json(); }
+    catch (e) { throw new Error("found at " + url + " but it is not valid JSON"); }
+    if (!g || !g.nodes || !g.width || !g.height) throw new Error("the JSON is missing nodes, width or height.");
+  } catch (err) {
+    console.warn("Could not load " + GRAPH_FILE + ", using sample graph.", err);
+    const st = document.getElementById('nav2dStatus');
+    if (st) st.textContent = "campus-graph.json failed: " + err.message + ". Showing sample graph.";
+    g = sampleGraph();
+  }
+  MAP_W = g.width; MAP_H = g.height; METERS_PER_PIXEL = g.metersPerPixel;
+  Object.keys(navNodes).forEach(k => delete navNodes[k]);
+  Object.assign(navNodes, g.nodes);
+}
+
+function navDistance(a, b) {
+  return Math.hypot(a.x - b.x, a.y - b.y) * METERS_PER_PIXEL;
+}
+
+function findNavPath(startId, endId) {
+  const openSet = new Set([startId]);
+  const cameFrom = {}, gScore = {}, fScore = {};
+  Object.keys(navNodes).forEach(id => { gScore[id] = Infinity; fScore[id] = Infinity; });
+  gScore[startId] = 0;
+  fScore[startId] = navDistance(navNodes[startId], navNodes[endId]);
+
+  while (openSet.size > 0) {
+    let current = null, lowest = Infinity;
+    openSet.forEach(id => { if (fScore[id] < lowest) { lowest = fScore[id]; current = id; } });
+
+    if (current === endId) {
+      const path = [current];
+      while (cameFrom[current]) { current = cameFrom[current]; path.unshift(current); }
+      return path;
+    }
+    openSet.delete(current);
+
+    navNodes[current].connects_to.forEach(nid => {
+      const g = gScore[current] + navDistance(navNodes[current], navNodes[nid]);
+      if (g < gScore[nid]) {
+        cameFrom[nid] = current;
+        gScore[nid] = g;
+        fScore[nid] = g + navDistance(navNodes[nid], navNodes[endId]);
+        openSet.add(nid);
+      }
+    });
+  }
+  return null;
+}
+
+function getRouteStats(path) {
+  let meters = 0;
+  for (let i = 0; i < path.length - 1; i++) {
+    meters += navDistance(navNodes[path[i]], navNodes[path[i + 1]]);
+  }
+  return { meters: Math.round(meters), minutes: Math.max(1, Math.round(meters / 1.4 / 60)) };
+}
+
+let leafletMap, imgOverlay, navRouteLine, routeMarkersGroup;
+
+async function initLeafletNav() {
+  await loadGraph();
+  const bounds = [[0, 0], [MAP_H, MAP_W]];
+
+  const southWest = L.latLng(8.146679, 123.842943);
+  const northEast = L.latLng(8.153333, 123.848912);
+  const campusBounds = L.latLngBounds(southWest, northEast);
+
+  leafletMap = L.map('leafletMap', {
+    maxBounds: campusBounds,
+    maxBoundsViscosity: 1.0,
+    attributionControl: false
+  });
+
+  imgOverlay = L.imageOverlay("campus-map-modified.png", campusBounds)
+    .on('error', () => console.error('Map image not found: campus-map-modified.png'))
+    .addTo(leafletMap);
+
+  imgOverlay.once('load', () => {
+    leafletMap.invalidateSize();
+    leafletMap.setMinZoom(0.3);
+    leafletMap.setMaxZoom(3);
+    leafletMap.fitBounds(bounds);
+  });
+
+  setTimeout(() => {
+    leafletMap.invalidateSize();
+    leafletMap.setMinZoom(0.3);
+    leafletMap.setMaxZoom(3);
+    leafletMap.fitBounds(bounds);
+  }, 200);
+
+  // Render Building Labels (No default red dots)
+  Object.entries(navNodes).forEach(([id, n]) => {
+    if (n.type === "building" && n.name) {
+      L.marker(toLL(n.x, n.y), {
+        icon: L.divIcon({
+          className: 'building-2d-label',
+          html: `<div style="font-weight:700; font-size:12px; color:#1b4332; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; white-space:nowrap; pointer-events:none;">${n.name}</div>`,
+          iconSize: [0, 0],
+          iconAnchor: [0, 0]
+        })
+      }).addTo(leafletMap);
+    }
+  });
+
+  const from = document.getElementById('nav2dFrom');
+  const to = document.getElementById('nav2dTo');
+  from.innerHTML = ''; to.innerHTML = '';
+  Object.entries(navNodes).filter(([, n]) => n.type === "building").forEach(([id, n]) => {
+    from.innerHTML += `<option value="${id}">${n.name}</option>`;
+    to.innerHTML += `<option value="${id}">${n.name}</option>`;
+  });
+  if (to.options.length > 1) to.selectedIndex = 1;
+}
+
+function find2DRoute() {
+  if (!leafletMap) return;
+  const startId = document.getElementById('nav2dFrom').value;
+  const endId = document.getElementById('nav2dTo').value;
+  if (startId === endId) return;
+
+  clear2DRoute();
+  
+  const path = findNavPath(startId, endId);
+  const el = document.getElementById('nav2dStats');
+  if (!path) { 
+    if (el) el.textContent = "No connected path between these buildings."; 
+    return; 
+  }
+
+  // Render Path Polyline
+  navRouteLine = L.polyline(path.map(id => toLL(navNodes[id].x, navNodes[id].y)), {
+    color: "#fffa00",
+    weight: 5,
+    lineJoin: "round"
+  }).addTo(leafletMap);
+
+  // Render Dynamic Route Waypoint Dots
+  routeMarkersGroup = L.layerGroup().addTo(leafletMap);
+  path.forEach((id, idx) => {
+    const node = navNodes[id];
+    let color = "#ff9f43"; // Orange for path waypoints
+    let radius = 4;
+
+    if (idx === 0) {
+      color = "#27ae60"; // Green for Start Node
+      radius = 6;
+    } else if (idx === path.length - 1) {
+      color = "#d62828"; // Red for Destination Node
+      radius = 6;
+    }
+
+    L.circleMarker(toLL(node.x, node.y), {
+      radius: radius,
+      color: "#ffffff",
+      fillColor: color,
+      fillOpacity: 1,
+      weight: 2
+    }).addTo(routeMarkersGroup);
+  });
+
+  leafletMap.fitBounds(navRouteLine.getBounds(), { padding: [40, 40] });
+
+  const s = getRouteStats(path);
+  if (el) el.textContent = `${s.meters} m, about ${s.minutes} min walk`;
+}
+
+function clear2DRoute() {
+  if (navRouteLine) { 
+    leafletMap.removeLayer(navRouteLine); 
+    navRouteLine = null; 
+  }
+  if (routeMarkersGroup) {
+    leafletMap.removeLayer(routeMarkersGroup);
+    routeMarkersGroup = null;
+  }
+  const el = document.getElementById('nav2dStats');
+  if (el) el.textContent = "";
+}
+
+function swap2DRoute() {
+  const fromSelect = document.getElementById('nav2dFrom');
+  const toSelect = document.getElementById('nav2dTo');
+  const temp = fromSelect.value;
+  fromSelect.value = toSelect.value;
+  toSelect.value = temp;
+  if (navRouteLine) find2DRoute();
+}
+
+// Satellite Overlay Integration
+let satelliteLayer = null;
+let isSatelliteActive = false;
+const SATELLITE_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+
+function toggleSatelliteView() {
+  if (!leafletMap) return;
+  const satBtn = document.getElementById("satBtn");
+
+  if (!isSatelliteActive) {
+    if (!satelliteLayer) {
+      satelliteLayer = L.tileLayer(SATELLITE_URL, {
+        maxZoom: 19,
+        attribution: 'Tiles &copy; Esri'
+      });
+    }
+    
+    satelliteLayer.addTo(leafletMap);
+    satelliteLayer.bringToBack();
+
+    if (imgOverlay) {
+      imgOverlay.setOpacity(0.45);
+    }
+
+    isSatelliteActive = true;
+    if (satBtn) satBtn.innerHTML = "<i class='bx bx-layer'></i> Hide Satellite";
+  } else {
+    if (satelliteLayer) {
+      leafletMap.removeLayer(satelliteLayer);
+    }
+    if (imgOverlay) {
+      imgOverlay.setOpacity(1.0);
+    }
+
+    isSatelliteActive = false;
+    if (satBtn) satBtn.innerHTML = "<i class='bx bx-layer'></i> Satellite Overlay";
+  }
+}
+
+// Live GPS Tracking Engine
+let userLocationMarker = null;
+let userAccuracyCircle = null;
+let gpsWatchId = null;
+
+const GPS_CALIBRATION = {
+  // Burgos Gate (p1)
+  p1: { lat: 8.148051647993354, lng: 123.84536532533062, x: 595, y: 71 },
+  // Oval (p2)
+  p2: { lat: 8.149348869567486, lng: 123.84714313116982, x: 523, y: 608 }
+};
+
+function gpsToPixel(lat, lng) {
+  const { p1, p2 } = GPS_CALIBRATION;
+  const percentX = (lng - p1.lng) / (p2.lng - p1.lng);
+  const percentY = (lat - p1.lat) / (p2.lat - p1.lat);
+
+  const x = p1.x + percentX * (p2.x - p1.x);
+  const y = p1.y + percentY * (p2.y - p1.y);
+
+  return { x, y };
+}
+
+function toggleGPSTracking() {
+  const gpsBtn = document.getElementById("gpsBtn");
+  if (gpsWatchId !== null) {
+    navigator.geolocation.clearWatch(gpsWatchId);
+    gpsWatchId = null;
+
+    if (userLocationMarker) leafletMap.removeLayer(userLocationMarker);
+    if (userAccuracyCircle) leafletMap.removeLayer(userAccuracyCircle);
+    userLocationMarker = null;
+    userAccuracyCircle = null;
+
+    gpsBtn.innerHTML = "<i class='bx bx-current-location'></i> Enable Live GPS";
+    document.getElementById("nav2dStats").innerText = "GPS Tracking Disabled.";
+    return;
+  }
+
+  if (!("geolocation" in navigator)) {
+    alert("Geolocation is not supported by your browser.");
+    return;
+  }
+
+  gpsBtn.innerText = "Locating...";
+
+  gpsWatchId = navigator.geolocation.watchPosition(
+    onGpsSuccess,
+    onGpsError,
+    {
+      enableHighAccuracy: true,
+      maximumAge: 0,
+      timeout: 10000
+    }
+  );
+}
+
+function onGpsSuccess(position) {
+  const lat = position.coords.latitude;
+  const lng = position.coords.longitude;
+  const accuracy = position.coords.accuracy;
+
+  if (accuracy > 35) {
+    document.getElementById("nav2dStats").innerText = 
+      `Weak GPS signal (~${Math.round(accuracy)}m). Move outdoors for better accuracy.`;
+    return;
+  }
+
+  const pix = gpsToPixel(lat, lng);
+  const leafletCoords = toLL(pix.x, pix.y);
+
+  if (pix.x < 0 || pix.x > MAP_W || pix.y < 0 || pix.y > MAP_H) {
+    document.getElementById("nav2dStats").innerText = 
+      `GPS active, but calculated position is outside campus image bounds.`;
+    return;
+  }
+
+  const pixelAccuracyRadius = accuracy / METERS_PER_PIXEL;
+  if (!userAccuracyCircle) {
+    userAccuracyCircle = L.circle(leafletCoords, {
+      radius: pixelAccuracyRadius,
+      color: "#007AFF",
+      fillColor: "#007AFF",
+      fillOpacity: 0.15,
+      weight: 1
+    }).addTo(leafletMap);
+  } else {
+    userAccuracyCircle.setLatLng(leafletCoords);
+    userAccuracyCircle.setRadius(pixelAccuracyRadius);
+  }
+
+  const locationIcon = L.divIcon({
+    className: 'custom-gps-marker',
+    html: '<div class="user-location-dot"></div>',
+    iconSize: [18, 18],
+    iconAnchor: [9, 9]
+  });
+
+  if (!userLocationMarker) {
+    userLocationMarker = L.marker(leafletCoords, { icon: locationIcon })
+      .addTo(leafletMap)
+      .bindTooltip("You are here", { 
+        permanent: true, 
+        direction: "top", 
+        offset: [0, -10],
+        className: "gps-tooltip"
+      })
+      .bindPopup("<b>You are here</b><br>Accuracy: ~" + Math.round(accuracy) + "m");
+  } else {
+    userLocationMarker.setLatLng(leafletCoords);
+    userLocationMarker.getPopup().setContent("<b>You are here</b><br>Accuracy: ~" + Math.round(accuracy) + "m");
+  }
+
+  document.getElementById("gpsBtn").innerHTML = "<i class='bx bx-current-location'></i> Disable Live GPS";
+  document.getElementById("nav2dStats").innerText = 
+    `Live GPS Active (Accuracy: ~${Math.round(accuracy)}m)`;
+}
+
+function onGpsError(error) {
+  let message = "Unable to retrieve GPS location.";
+  switch (error.code) {
+    case error.PERMISSION_DENIED:
+      message = "Location access was denied. Please allow location permissions in your browser settings and check that your connection uses HTTPS.";
+      break;
+    case error.POSITION_UNAVAILABLE:
+      message = "Location information is unavailable. Ensure device GPS is turned on.";
+      break;
+    case error.TIMEOUT:
+      message = "Location request timed out. Please try again.";
+      break;
+  }
+  
+  const statsEl = document.getElementById("nav2dStats");
+  if (statsEl) statsEl.innerText = message;
+  
+  alert(message);
+  toggleGPSTracking();
+}
+
+// Netlify AI Chatbot Integrations
+const chatBtn = document.getElementById('chatBtn');
+const chatBox = document.getElementById('chatBox');
+const chatBody = document.getElementById('chatBody');
+const chatInput = document.getElementById('chatInput');
+
+const SERVER_URL = window.location.origin + '/.netlify/functions';
+
+chatBtn.onclick = () => {
+  chatBox.style.display = chatBox.style.display === 'flex' ? 'none' : 'flex';
+  if (chatBox.style.display === 'flex') {
+    chatInput.focus();
+  }
+};
+
+chatInput.addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') {
+    sendMessage();
+  }
+});
+
+function addMessage(sender, text) {
+  const msg = document.createElement('div');
+  msg.classList.add('msg', sender);
+  msg.innerText = text;
+  chatBody.appendChild(msg);
+  chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+function addLoadingIndicator() {
+  const loading = document.createElement('div');
+  loading.id = 'loading';
+  loading.classList.add('msg', 'bot', 'loading');
+  loading.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+  chatBody.appendChild(loading);
+  chatBody.scrollTop = chatBody.scrollHeight;
+  return loading;
+}
+
+function removeLoadingIndicator() {
+  const loading = document.getElementById('loading');
+  if (loading) {
+    loading.remove();
+  }
+}
+
+async function sendMessage() {
+  const message = chatInput.value.trim();
+  if (!message) return;
+
+  addMessage('user', message);
+  chatInput.value = '';
+  
+  const loading = addLoadingIndicator();
+
+  try {
+    const response = await fetch(`${SERVER_URL}/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ message: message })
+    });
+
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    const data = await response.json();
+    removeLoadingIndicator();
+    addMessage('bot', data.response);
+    
+  } catch (error) {
+    console.error('Error:', error);
+    removeLoadingIndicator();
+    addMessage('bot', "Sorry, I'm having trouble connecting right now. Please try again later.");
+  }
+}
+
+async function loadInitialOptions() {
+  try {
+    const response = await fetch(`${SERVER_URL}/options`);
+    const data = await response.json();
+    
+    const optionsDiv = document.createElement('div');
+    optionsDiv.classList.add('options');
+    
+    data.categories.forEach(category => {
+      const categoryTitle = document.createElement('div');
+      categoryTitle.className = 'category-title';
+      categoryTitle.textContent = category.name;
+      optionsDiv.appendChild(categoryTitle);
+      
+      category.questions.forEach(question => {
+        const btn = document.createElement('button');
+        btn.innerText = question;
+        btn.onclick = () => {
+          chatInput.value = question;
+          sendMessage();
         };
+        optionsDiv.appendChild(btn);
+      });
+    });
+    
+    chatBody.appendChild(optionsDiv);
+    chatBody.scrollTop = chatBody.scrollHeight;
+    
+  } catch (error) {
+    console.error('Error loading options:', error);
+    showLocalOptions();
+  }
+}
 
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                }
-            });
-        }, observerOptions);
+function showLocalOptions() {
+  const optionsDiv = document.createElement('div');
+  optionsDiv.classList.add('options');
+  
+  const categories = [
+    {
+      name: "Admission Information",
+      questions: [
+        "How do I apply?",
+        "What are the requirements?",
+        "When is the application deadline?"
+      ]
+    },
+    {
+      name: "Tuition Fees",
+      questions: [
+        "How much is tuition?",
+        "Do you offer scholarships?",
+        "What payment methods are accepted?"
+      ]
+    },
+    {
+      name: "Campus Life", 
+      questions: [
+        "Are there dormitories?",
+        "What clubs are available?",
+        "What are the library hours?"
+      ]
+    }
+  ];
+  
+  categories.forEach(category => {
+    const categoryTitle = document.createElement('div');
+    categoryTitle.className = 'category-title';
+    categoryTitle.textContent = category.name;
+    optionsDiv.appendChild(categoryTitle);
+    
+    category.questions.forEach(question => {
+      const btn = document.createElement('button');
+      btn.innerText = question;
+      btn.onclick = () => {
+        chatInput.value = question;
+        sendMessage();
+      };
+      optionsDiv.appendChild(btn);
+    });
+  });
+  
+  chatBody.appendChild(optionsDiv);
+  chatBody.scrollTop = chatBody.scrollHeight;
+}
 
-        // Observe elements for animation
-        document.addEventListener('DOMContentLoaded', () => {
-            const animatedElements = document.querySelectorAll('.feature-card, .highlight-card');
-            animatedElements.forEach(el => {
-                el.style.opacity = '0';
-                el.style.transform = 'translateY(30px)';
-                el.style.transition = 'all 0.6s ease';
-                observer.observe(el);
-            });
-        });
-    </script>
+window.addEventListener('load', () => {
+  addMessage('bot', "Hello! 👋 I'm the La Salle University AI Assistant. I can help you with:\n\n• Admission Information\n• Tuition Fees & Scholarships\n• Campus Life & Facilities\n• Application Process\n\nChoose a question below or type your own!");
+  loadInitialOptions();
+});
+</script>
 </body>
 </html>
