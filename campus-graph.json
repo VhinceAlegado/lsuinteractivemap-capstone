@@ -1337,7 +1337,7 @@
       "x": 1370,
       "y": 256,
       "type": "strict",
-      "name": "Gate 8",
+      "name": "Gate 7",
       "connects_to": [
         "wp_12",
         "wp_233"
